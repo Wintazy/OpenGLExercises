@@ -8,17 +8,21 @@ void processInput(GLFWwindow *window);
 int compileShader(const char* shaderSource, GLuint type);
 
 const char *vertexShaderSource = "#version 330\n"
-	"layout (location = 0) in vec3 aPos;\n"
+	"layout (location = 0)\n"
+	"in vec3 aPos;\n"
+	"out vec4 vertexColor;\n"
 	"void main()\n"
 	"{\n"
 	"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+	"	vertexColor = vec4(0.4, 0.0, 0.0, 1.0);\n"
 	"}\0";
 
 const char *fragmentShaderSource = "#version 330\n"
+	"uniform vec4 customColor;\n"
 	"out vec4 FragColor;\n"
 	"void main()\n"
 	"{\n"
-	"	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+	"	FragColor = customColor;\n"
 	"}\0";
 
 int main()
@@ -132,8 +136,16 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 0.1f);
 		//Clear color buffer
 		glClear(GL_COLOR_BUFFER_BIT);
-		//Draw triangle part
+
+		//Activate shader
 		glUseProgram(shaderProgram);
+		//Update uniform color
+		float time = glfwGetTime();
+		float greenValue = sin(time) / 2.0f + 0.5f;
+		int vertexColorLocation = glGetUniformLocation(shaderProgram, "customColor");
+		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+		//Draw triangle part
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
