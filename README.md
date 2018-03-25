@@ -6,6 +6,6 @@ These exercises based on https://learnopengl.com
 
 ![./Docs/Image/OpenGLBasicProgram.svg](./Docs/Image/OpenGLBasicProgram.svg)
 
-## 2st exercise: OpenGL pipeline
+## 2nd exercise: OpenGL pipeline
 
 ![./Docs/Image/OpenGLPipeline.svg](./Docs/Image/OpenGLPipeline.svg)
