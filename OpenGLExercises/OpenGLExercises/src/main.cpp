@@ -8,21 +8,21 @@ void processInput(GLFWwindow *window);
 int compileShader(const char* shaderSource, GLuint type);
 
 const char *vertexShaderSource = "#version 330\n"
-	"layout (location = 0)\n"
-	"in vec3 aPos;\n"
-	"out vec4 vertexColor;\n"
+	"layout (location = 0) in vec3 aPos;\n"
+	"layout (location = 1) in vec3 aColor;\n"
+	"out vec3 vertexColor;\n"
 	"void main()\n"
 	"{\n"
 	"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-	"	vertexColor = vec4(0.4, 0.0, 0.0, 1.0);\n"
+	"	vertexColor = aColor;\n"
 	"}\0";
 
 const char *fragmentShaderSource = "#version 330\n"
-	"uniform vec4 customColor;\n"
+	"in vec3 vertexColor;\n"
 	"out vec4 FragColor;\n"
 	"void main()\n"
 	"{\n"
-	"	FragColor = customColor;\n"
+	"	FragColor = vec4(vertexColor, 1.0);\n"
 	"}\0";
 
 int main()
@@ -56,7 +56,7 @@ int main()
 	//-------------
 
 	//Set draw style to wireframe polygons
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	//Register callback function handle window's buffer size changes
 	glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
 
@@ -87,10 +87,10 @@ int main()
 
 	//prepare vertex data to render
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f
 	};
 
 	unsigned int indices[] = {
@@ -113,12 +113,16 @@ int main()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	//Tell OpenGL how the hell it should read the vertex attributes data
-	//Here is: the vertext attribute at location 0, have 3 values, type is FLOAT, shouldn't normalize,
-	//size of the stride to next vertex atrribute set is 3*sizeof(float),
+	//Here is position attribute: the vertex attribute at location 0, have 3 values, type is FLOAT, shouldn't normalize,
+	//size of the stride to next vertex atrribute set is 6*sizeof(float),
 	//and offset of where the data begins in the buffer is 0
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	//Remember to enable these attribute at that location before render
 	glEnableVertexAttribArray(0);
+
+	//Same with color attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	//Buffer could be Unbound after the attributes were registered
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
