@@ -9,3 +9,9 @@ These exercises based on https://learnopengl.com
 ## 2nd exercise: OpenGL pipeline
 
 ![./Docs/Image/OpenGLPipeline.svg](./Docs/Image/OpenGLPipeline.svg)
+
+## 3rd exercise: Shaders in GLSL
+
+![./Docs/Image/GLSLShaderStructure.png](./Docs/Image/GLSLShaderStructure.png)
+
+
