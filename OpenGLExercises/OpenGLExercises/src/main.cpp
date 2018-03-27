@@ -3,27 +3,13 @@
 
 #include <iostream>
 
+#include "Shader\ShadersLoader.h"
+
+const GLchar* VERTEX_SHADER_PATH = "../Data/Shaders/Normal.vs";
+const GLchar* FRAGMENT_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
+
 void frame_buffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
-int compileShader(const char* shaderSource, GLuint type);
-
-const char *vertexShaderSource = "#version 330\n"
-	"layout (location = 0) in vec3 aPos;\n"
-	"layout (location = 1) in vec3 aColor;\n"
-	"out vec3 vertexColor;\n"
-	"void main()\n"
-	"{\n"
-	"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-	"	vertexColor = aColor;\n"
-	"}\0";
-
-const char *fragmentShaderSource = "#version 330\n"
-	"in vec3 vertexColor;\n"
-	"out vec4 FragColor;\n"
-	"void main()\n"
-	"{\n"
-	"	FragColor = vec4(vertexColor, 1.0);\n"
-	"}\0";
 
 int main()
 {
@@ -60,30 +46,8 @@ int main()
 	//Register callback function handle window's buffer size changes
 	glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
 
-	//Compile shader
-	int vertexShader = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
-	int fragmentShader = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
-	//------
-
-	//Link shader
-	int shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader( shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	int success;
-	char infoLog[512];
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout << "Failed to link shader program!\n" << infoLog << std::endl;
-	}
-
-	//Delete shader after linked
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-	//-----
+	ShadersLoader shadersLoader = ShadersLoader();
+	shadersLoader.LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
 
 	//prepare vertex data to render
 	float vertices[] = {
@@ -142,12 +106,14 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//Activate shader
-		glUseProgram(shaderProgram);
+		shadersLoader.EnableShaderProgram();
+		//Optional: Enable blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		//Update uniform color
 		float time = glfwGetTime();
-		float greenValue = sin(time) / 2.0f + 0.5f;
-		int vertexColorLocation = glGetUniformLocation(shaderProgram, "customColor");
-		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+		float alpha = sin(time) / 2.0f + 0.5f;
+		shadersLoader.SetFloat("customAlpha", alpha);
 
 		//Draw triangle part
 		glBindVertexArray(VAO);
@@ -184,23 +150,4 @@ void processInput(GLFWwindow *window)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
-}
-
-int compileShader(const char* shaderSource, GLuint type)
-{
-	int shaderResult = glCreateShader(type);
-	glShaderSource(shaderResult, 1, &shaderSource, NULL);
-	glCompileShader(shaderResult);
-
-	int success;
-	char infoLog[512];
-	glGetShaderiv(shaderResult, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(shaderResult, 512, NULL, infoLog);
-		std::cout << "Failed to compile shader!\n" << infoLog << std::endl;
-		return -1;
-	}
-
-	return shaderResult;
 }
