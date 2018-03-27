@@ -1,7 +1,14 @@
 /OpenGLExercises/.vs
-/OpenGLExercises/Debug
-/OpenGLExercises/glfw-3.2.1/build/
+/OpenGLExercises/Debug/*
+!/OpenGLExercises/Debug/OpenGLExercises.exe
+/OpenGLExercises/glfw-3.2.1/build/*
+!/OpenGLExercises/glfw-3.2.1/build/src
+/OpenGLExercises/glfw-3.2.1/build/src/*
 !/OpenGLExercises/glfw-3.2.1/build/src/Debug/glfw3.lib
+!/OpenGLExercises/glfw-3.2.1/build/src/glfw.dir
+/OpenGLExercises/glfw-3.2.1/build/src/glfw.dir/*
+!/OpenGLExercises/glfw-3.2.1/build/src/glfw.dir/Debug
+/OpenGLExercises/glfw-3.2.1/build/src/glfw.dir/Debug/*
 !/OpenGLExercises/glfw-3.2.1/build/src/glfw.dir/Debug/glfw.pdb
 /OpenGLExercises/OpenGLExercises/Debug
 /OpenGLExercises/OpenGLExercises/x64
