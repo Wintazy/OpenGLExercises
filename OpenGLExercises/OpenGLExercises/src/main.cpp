@@ -4,9 +4,11 @@
 #include <iostream>
 
 #include "Shader\ShadersLoader.h"
+#include "Utilities\stbImageLoader\stb_image.h"
 
 const GLchar* VERTEX_SHADER_PATH = "../Data/Shaders/Normal.vs";
 const GLchar* FRAGMENT_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
+const GLchar* TEXTURE_PATH = "../Data/Textures/container.jpg";
 
 void frame_buffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -51,10 +53,11 @@ int main()
 
 	//prepare vertex data to render
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f
+		//Positions       Colors             Texture coords
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
 	};
 
 	unsigned int indices[] = {
@@ -80,18 +83,49 @@ int main()
 	//Here is position attribute: the vertex attribute at location 0, have 3 values, type is FLOAT, shouldn't normalize,
 	//size of the stride to next vertex atrribute set is 6*sizeof(float),
 	//and offset of where the data begins in the buffer is 0
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	//Remember to enable these attribute at that location before render
 	glEnableVertexAttribArray(0);
 
 	//Same with color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+	//Texture attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	//Buffer could be Unbound after the attributes were registered
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	//So is the vertex array
 	glBindVertexArray(0);
+
+	/*---Load texture---*/
+	unsigned int textureId;
+	glGenTextures(1, &textureId);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	//Load texture from file
+	int imgWidth, imgHeight, colorChannelsNum;
+	unsigned char* textureData = stbi_load(TEXTURE_PATH, &imgWidth, &imgHeight, &colorChannelsNum, 0);
+	if (textureData)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::wcout << "Failed to load texture: " << TEXTURE_PATH << std::endl;
+	}
+	//Clean up
+	stbi_image_free(textureData);
+	/*---Load texture end---*/
+
 
 	//Render loop - keep running till window should stop
 	while (!glfwWindowShouldClose(window))
@@ -116,6 +150,7 @@ int main()
 		shadersLoader.SetFloat("customAlpha", alpha);
 
 		//Draw triangle part
+		glBindTexture(GL_TEXTURE_2D, textureId);
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);

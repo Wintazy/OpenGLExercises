@@ -25,6 +25,15 @@
     <Filter Include="Source Files\Shader">
       <UniqueIdentifier>{a79a1047-4658-449e-9c76-e042c27e3f10}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Utilities\stbImageLoader">
+      <UniqueIdentifier>{93a6c178-d137-4da9-81f0-970bcb1e7e7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utilities">
+      <UniqueIdentifier>{fa0e2903-450a-4502-b899-978a81f9f2b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utilities\stbImageLoader">
+      <UniqueIdentifier>{5c6fae3a-cd42-4db8-b143-7348ebe6c486}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Utilities\glad\glad.c">
@@ -36,10 +45,16 @@
     <ClCompile Include="src\Shader\ShadersLoader.cpp">
       <Filter>Source Files\Shader</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utilities\stbImageLoader\stbImageLoaderImpl.cpp">
+      <Filter>Source Files\Utilities\stbImageLoader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader\ShadersLoader.h">
       <Filter>Header Files\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utilities\stbImageLoader\stb_image.h">
+      <Filter>Header Files\Utilities\stbImageLoader</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
