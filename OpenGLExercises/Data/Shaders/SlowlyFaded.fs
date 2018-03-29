@@ -5,9 +5,10 @@ in vec2 TexCoord;
 out vec4 fragColor;
 
 uniform float customAlpha;
-uniform sampler2D customTexture;
+uniform sampler2D customTexture1;
+uniform sampler2D customTexture2;
 
 void main()
 {
-	fragColor = texture(customTexture, TexCoord) * vec4(vertexColor, customAlpha);
+	fragColor = mix(texture(customTexture1, TexCoord), texture(customTexture2, TexCoord), texture(customTexture2, TexCoord).a) * vec4(vertexColor, customAlpha);
 }

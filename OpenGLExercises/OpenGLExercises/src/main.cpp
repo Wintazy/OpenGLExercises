@@ -8,7 +8,8 @@
 
 const GLchar* VERTEX_SHADER_PATH = "../Data/Shaders/Normal.vs";
 const GLchar* FRAGMENT_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
-const GLchar* TEXTURE_PATH = "../Data/Textures/container.jpg";
+const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/container.jpg";
+const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/awesomeface.png";
 
 void frame_buffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -101,9 +102,9 @@ int main()
 	glBindVertexArray(0);
 
 	/*---Load texture---*/
-	unsigned int textureId;
-	glGenTextures(1, &textureId);
-	glBindTexture(GL_TEXTURE_2D, textureId);
+	unsigned int containerTextureId;
+	glGenTextures(1, &containerTextureId);
+	glBindTexture(GL_TEXTURE_2D, containerTextureId);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -112,7 +113,11 @@ int main()
 
 	//Load texture from file
 	int imgWidth, imgHeight, colorChannelsNum;
-	unsigned char* textureData = stbi_load(TEXTURE_PATH, &imgWidth, &imgHeight, &colorChannelsNum, 0);
+
+	//Prevent flip upside-down image, as different in coordinates system
+	stbi_set_flip_vertically_on_load(true);
+
+	unsigned char* textureData = stbi_load(CONTAINER_TEXTURE_PATH, &imgWidth, &imgHeight, &colorChannelsNum, 0);
 	if (textureData)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
@@ -120,12 +125,41 @@ int main()
 	}
 	else
 	{
-		std::wcout << "Failed to load texture: " << TEXTURE_PATH << std::endl;
+		std::wcout << "Failed to load texture: " << CONTAINER_TEXTURE_PATH << std::endl;
+	}
+	//Load Face texture
+	unsigned int faceTextureId;
+	glGenTextures(1, &faceTextureId);
+	glBindTexture(GL_TEXTURE_2D, faceTextureId);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	textureData = stbi_load(FACE_TEXTURE_PATH, &imgWidth, &imgHeight, &colorChannelsNum, 0);
+	if (textureData)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imgWidth, imgHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::wcout << "Failed to load texture: " << FACE_TEXTURE_PATH << std::endl;
 	}
 	//Clean up
 	stbi_image_free(textureData);
 	/*---Load texture end---*/
 
+	//Activate shader before setting uniform
+	shadersLoader.EnableShaderProgram();
+
+	shadersLoader.SetInt("customTexture1", 0);
+	shadersLoader.SetInt("customTexture2", 1);
+
+	//Optional: Enable blending
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Render loop - keep running till window should stop
 	while (!glfwWindowShouldClose(window))
@@ -139,18 +173,17 @@ int main()
 		//Clear color buffer
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//Activate shader
-		shadersLoader.EnableShaderProgram();
-		//Optional: Enable blending
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		//Update uniform color
 		float time = glfwGetTime();
 		float alpha = sin(time) / 2.0f + 0.5f;
 		shadersLoader.SetFloat("customAlpha", alpha);
 
 		//Draw triangle part
-		glBindTexture(GL_TEXTURE_2D, textureId);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, containerTextureId);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, faceTextureId);
+
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
