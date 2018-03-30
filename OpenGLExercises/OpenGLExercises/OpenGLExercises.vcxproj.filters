@@ -34,6 +34,15 @@
     <Filter Include="Header Files\Utilities\stbImageLoader">
       <UniqueIdentifier>{5c6fae3a-cd42-4db8-b143-7348ebe6c486}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Data">
+      <UniqueIdentifier>{9ebdec57-0519-4712-a6c2-20d1b1265546}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data\Shaders">
+      <UniqueIdentifier>{28864d7d-6dd3-44cc-a245-d89834fceeb9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data\Textures">
+      <UniqueIdentifier>{b614c5ee-700a-43dc-9684-4e4d52205aff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Utilities\glad\glad.c">
@@ -56,5 +65,24 @@
     <ClInclude Include="src\Utilities\stbImageLoader\stb_image.h">
       <Filter>Header Files\Utilities\stbImageLoader</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Data\Shaders\Normal.vs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\SlowlyFaded.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\Transform.vs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Data\Textures\awesomeface.png">
+      <Filter>Data\Textures</Filter>
+    </Image>
+    <Image Include="..\Data\Textures\container.jpg">
+      <Filter>Data\Textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>

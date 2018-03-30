@@ -101,3 +101,8 @@ void ShadersLoader::SetFloat(const std::string &name, float value) const
 {
 	glUniform1f(glGetUniformLocation(m_shaderProgramId, name.c_str()), value);
 }
+
+void ShadersLoader::SetMat4f(const std::string &name, float* value) const
+{
+	glUniformMatrix4fv(glGetUniformLocation(m_shaderProgramId, name.c_str()), 1, GL_FALSE, value);
+}

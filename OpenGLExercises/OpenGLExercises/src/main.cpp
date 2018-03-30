@@ -1,12 +1,17 @@
 #include <glad\glad.h>
 #include <GLFW\glfw3.h>
 
+#include <glm\glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
+#include <glm\gtc\type_ptr.hpp>
+
 #include <iostream>
 
 #include "Shader\ShadersLoader.h"
 #include "Utilities\stbImageLoader\stb_image.h"
 
 const GLchar* VERTEX_SHADER_PATH = "../Data/Shaders/Normal.vs";
+const GLchar* TRANSFORM_VERTEX_SHADER_PATH = "../Data/Shaders/Transform.vs";
 const GLchar* FRAGMENT_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
 const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/container.jpg";
 const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/awesomeface.png";
@@ -50,7 +55,7 @@ int main()
 	glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
 
 	ShadersLoader shadersLoader = ShadersLoader();
-	shadersLoader.LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
+	shadersLoader.LoadShaders(TRANSFORM_VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
 
 	//prepare vertex data to render
 	float vertices[] = {
@@ -177,6 +182,12 @@ int main()
 		float time = glfwGetTime();
 		float alpha = sin(time) / 2.0f + 0.5f;
 		shadersLoader.SetFloat("customAlpha", alpha);
+
+		//Setup transform matrix
+		glm::mat4 transMat;
+		transMat = glm::rotate(transMat, glm::radians(alpha * 360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		transMat = glm::scale(transMat, glm::vec3(alpha, alpha, alpha));
+		shadersLoader.SetMat4f("transformMat", glm::value_ptr(transMat));
 
 		//Draw triangle part
 		glActiveTexture(GL_TEXTURE0);

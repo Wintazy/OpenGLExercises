@@ -137,6 +137,15 @@
     <ClInclude Include="src\Shader\ShadersLoader.h" />
     <ClInclude Include="src\Utilities\stbImageLoader\stb_image.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Data\Shaders\Normal.vs" />
+    <None Include="..\Data\Shaders\Transform.vs" />
+    <None Include="..\Data\Shaders\SlowlyFaded.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Data\Textures\awesomeface.png" />
+    <Image Include="..\Data\Textures\container.jpg" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
