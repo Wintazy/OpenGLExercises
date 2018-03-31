@@ -138,7 +138,9 @@
     <ClInclude Include="src\Utilities\stbImageLoader\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Data\Shaders\2DTo3D.vs" />
     <None Include="..\Data\Shaders\Normal.vs" />
+    <None Include="..\Data\Shaders\ApplyTexture.fs" />
     <None Include="..\Data\Shaders\Transform.vs" />
     <None Include="..\Data\Shaders\SlowlyFaded.fs" />
   </ItemGroup>

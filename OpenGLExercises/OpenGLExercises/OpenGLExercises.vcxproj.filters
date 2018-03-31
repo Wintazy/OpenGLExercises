@@ -76,6 +76,12 @@
     <None Include="..\Data\Shaders\Transform.vs">
       <Filter>Data\Shaders</Filter>
     </None>
+    <None Include="..\Data\Shaders\2DTo3D.vs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\ApplyTexture.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Data\Textures\awesomeface.png">

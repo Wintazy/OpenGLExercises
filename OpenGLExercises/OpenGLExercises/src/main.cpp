@@ -12,9 +12,13 @@
 
 const GLchar* VERTEX_SHADER_PATH = "../Data/Shaders/Normal.vs";
 const GLchar* TRANSFORM_VERTEX_SHADER_PATH = "../Data/Shaders/Transform.vs";
-const GLchar* FRAGMENT_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
+const GLchar* TRANSFORM_2D_3D_VERTEX_SHADER_PATH = "../Data/Shaders/2dTo3d.vs";
+const GLchar* FADED_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
+const GLchar* FRAGMENT_SHADER_PATH = "../Data/Shaders/ApplyTexture.fs";
 const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/container.jpg";
 const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/awesomeface.png";
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
 
 void frame_buffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -31,7 +35,7 @@ int main()
 	//-------------
 
 	//Create window object
-	GLFWwindow* window = glfwCreateWindow(800, 600, "HelloOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "HelloOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -55,20 +59,41 @@ int main()
 	glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
 
 	ShadersLoader shadersLoader = ShadersLoader();
-	shadersLoader.LoadShaders(TRANSFORM_VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
+	shadersLoader.LoadShaders(TRANSFORM_2D_3D_VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
 
 	//prepare vertex data to render
 	float vertices[] = {
 		//Positions       Colors             Texture coords
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //0
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, //1
+		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, //2
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //3
+		-0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, //4
+		0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, //5
+		0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, //6
+		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //7
+
+		-0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, //8
+		0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, //9
+		0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, //10
+		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f //11
+
 	};
 
 	unsigned int indices[] = {
 		0, 1, 2,
-		0, 2, 3
+		0, 2, 3,
+		0, 1, 5,
+		0, 4, 5,
+		2, 3, 7,
+		2, 6, 7,
+		4, 5, 7,
+		5, 6, 7,
+
+		0, 3, 11,
+		0, 8, 11,
+		1, 2, 10,
+		1, 9, 10
 	};
 
 	unsigned int VBO, VAO, EBO;
@@ -162,9 +187,26 @@ int main()
 	shadersLoader.SetInt("customTexture1", 0);
 	shadersLoader.SetInt("customTexture2", 1);
 
-	//Optional: Enable blending
+	//Clones positions
+	glm::vec3 clonePositions[] = {
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+
+	//Optional: Enable blending to correct alpha
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	//Enable depth buffer
+	glEnable(GL_DEPTH_TEST);
 
 	//Render loop - keep running till window should stop
 	while (!glfwWindowShouldClose(window))
@@ -175,8 +217,8 @@ int main()
 		/*---Rendering part---*/
 		//Set color to clear screen with
 		glClearColor(0.2f, 0.3f, 0.3f, 0.1f);
-		//Clear color buffer
-		glClear(GL_COLOR_BUFFER_BIT);
+		//Clear color buffer and depth buffer
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//Update uniform color
 		float time = glfwGetTime();
@@ -187,7 +229,19 @@ int main()
 		glm::mat4 transMat;
 		transMat = glm::rotate(transMat, glm::radians(alpha * 360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		transMat = glm::scale(transMat, glm::vec3(alpha, alpha, alpha));
+
+		//Setup coordinate systems transform matrices
+		glm::mat4 viewMat;
+		viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -6.0f));
+		viewMat = glm::rotate(viewMat, time * glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		glm::mat4 projectionMat;
+		projectionMat = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+
+		//Apply transform matrix
 		shadersLoader.SetMat4f("transformMat", glm::value_ptr(transMat));
+		shadersLoader.SetMat4f("viewMat", glm::value_ptr(viewMat));
+		shadersLoader.SetMat4f("projectionMat", glm::value_ptr(projectionMat));
 
 		//Draw triangle part
 		glActiveTexture(GL_TEXTURE0);
@@ -198,7 +252,16 @@ int main()
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		int clonesNumber = sizeof(clonePositions) / sizeof(*clonePositions);
+		for (unsigned int i = 0; i < clonesNumber; i++)
+		{
+			glm::mat4 modelMat;
+			modelMat = glm::translate(modelMat, clonePositions[i]);
+			modelMat = glm::rotate(modelMat, (i + 1) * time * glm::radians(30.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+			shadersLoader.SetMat4f("modelMat", glm::value_ptr(modelMat));
+
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		}
 
 		/*---Rendering end---*/
 
