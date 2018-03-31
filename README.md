@@ -14,4 +14,6 @@ These exercises based on https://learnopengl.com
 
 ![./Docs/Image/GLSLShaderStructure.png](./Docs/Image/GLSLShaderStructure.png)
 
+## 4th exercise: Apply textures
 
+![./Docs/Image/ApplyTexture.jpg](./Docs/Image/ApplyTexture.jpg)
