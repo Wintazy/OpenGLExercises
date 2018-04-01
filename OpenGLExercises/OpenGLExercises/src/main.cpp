@@ -9,7 +9,6 @@
 
 #include "Shader\ShadersLoader.h"
 #include "Utilities\stbImageLoader\stb_image.h"
-#include "Camera.h"
 
 const GLchar* VERTEX_SHADER_PATH = "../Data/Shaders/Normal.vs";
 const GLchar* TRANSFORM_VERTEX_SHADER_PATH = "../Data/Shaders/Transform.vs";
@@ -18,19 +17,11 @@ const GLchar* FADED_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
 const GLchar* FRAGMENT_SHADER_PATH = "../Data/Shaders/ApplyTexture.fs";
 const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/container.jpg";
 const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/awesomeface.png";
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
 
-float lastTime = 0.0f;
-float deltaTime = 0.0f;
-
-float lastMousePosX = SCREEN_WIDTH / 2;
-float lastMousePosY = SCREEN_HEIGHT / 2;
-
-void onFrameBufferSizeChanged(GLFWwindow* window, int width, int height);
+void frame_buffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
-void onMousePosChanged(GLFWwindow *window, double posX, double posY);
-void onMouseScrolled(GLFWwindow *window, double offsetX, double offsetY);
-
-Camera* camera = new Camera();
 
 int main()
 {
@@ -65,7 +56,7 @@ int main()
 	//Set draw style to wireframe polygons
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	//Register callback function handle window's buffer size changes
-	glfwSetFramebufferSizeCallback(window, onFrameBufferSizeChanged);
+	glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
 
 	ShadersLoader shadersLoader = ShadersLoader();
 	shadersLoader.LoadShaders(TRANSFORM_2D_3D_VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
@@ -164,7 +155,7 @@ int main()
 	}
 	else
 	{
-		std::cout << "Failed to load texture: " << CONTAINER_TEXTURE_PATH << std::endl;
+		std::wcout << "Failed to load texture: " << CONTAINER_TEXTURE_PATH << std::endl;
 	}
 	//Load Face texture
 	unsigned int faceTextureId;
@@ -184,7 +175,7 @@ int main()
 	}
 	else
 	{
-		std::cout << "Failed to load texture: " << FACE_TEXTURE_PATH << std::endl;
+		std::wcout << "Failed to load texture: " << FACE_TEXTURE_PATH << std::endl;
 	}
 	//Clean up
 	stbi_image_free(textureData);
@@ -210,20 +201,12 @@ int main()
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
-	/*------ Further openGL config -------*/
 	//Optional: Enable blending to correct alpha
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Enable depth buffer
 	glEnable(GL_DEPTH_TEST);
-	//Setup input mode
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glfwSetCursorPos(window, lastMousePosX, lastMousePosY);
-	//Handle mouse input
-	glfwSetCursorPosCallback(window, onMousePosChanged);
-	glfwSetScrollCallback(window, onMouseScrolled);
-	/*------------------------- -------*/
 
 	//Render loop - keep running till window should stop
 	while (!glfwWindowShouldClose(window))
@@ -238,23 +221,27 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//Update uniform color
-		float currentTime = glfwGetTime();
-		float alpha = sin(currentTime) / 2.0f + 0.5f;
+		float time = glfwGetTime();
+		float alpha = sin(time) / 2.0f + 0.5f;
 		shadersLoader.SetFloat("customAlpha", alpha);
-
-		//Update delta time for input handle
-		deltaTime = currentTime - lastTime;
-		lastTime = currentTime;
 
 		//Setup transform matrix
 		glm::mat4 transMat;
 		transMat = glm::rotate(transMat, glm::radians(alpha * 360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		transMat = glm::scale(transMat, glm::vec3(alpha, alpha, alpha));
 
+		//Setup coordinate systems transform matrices
+		glm::mat4 viewMat;
+		viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -6.0f));
+		viewMat = glm::rotate(viewMat, time * glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		glm::mat4 projectionMat;
+		projectionMat = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+
 		//Apply transform matrix
 		shadersLoader.SetMat4f("transformMat", glm::value_ptr(transMat));
-		shadersLoader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
-		shadersLoader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+		shadersLoader.SetMat4f("viewMat", glm::value_ptr(viewMat));
+		shadersLoader.SetMat4f("projectionMat", glm::value_ptr(projectionMat));
 
 		//Draw triangle part
 		glActiveTexture(GL_TEXTURE0);
@@ -270,7 +257,7 @@ int main()
 		{
 			glm::mat4 modelMat;
 			modelMat = glm::translate(modelMat, clonePositions[i]);
-			modelMat = glm::rotate(modelMat, (i + 1) * currentTime * glm::radians(30.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+			modelMat = glm::rotate(modelMat, (i + 1) * time * glm::radians(30.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 			shadersLoader.SetMat4f("modelMat", glm::value_ptr(modelMat));
 
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
@@ -294,48 +281,15 @@ int main()
 	return 0;
 }
 
-void onFrameBufferSizeChanged(GLFWwindow* window, int width, int height)
+void frame_buffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
 
 void processInput(GLFWwindow *window)
 {
-	float cameraSpeed = CAMERA_SPEED * deltaTime;
-
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		camera->MoveAlongDirection(cameraSpeed, camera->GetFrontDir());
-	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		camera->MoveAlongDirection(-cameraSpeed, camera->GetFrontDir());
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		camera->MoveAlongDirection(-cameraSpeed, camera->GetFrontCrossDir());
-	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		camera->MoveAlongDirection(cameraSpeed, camera->GetFrontCrossDir());
-	}
-}
-
-void onMousePosChanged(GLFWwindow *window, double posX, double posY)
-{
-	float offsetX = (posX - lastMousePosX) * MOUSE_SENSITIVITY;
-	float offsetY = (lastMousePosY - posY) * MOUSE_SENSITIVITY;
-	lastMousePosX = posX;
-	lastMousePosY = posY;
-
-	camera->UpdateAngles(offsetX, offsetY);
-}
-
-void onMouseScrolled(GLFWwindow *window, double offetX, double offsetY)
-{
-	camera->UpdateFOV(offsetY);
 }

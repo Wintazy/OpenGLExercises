@@ -57,9 +57,6 @@
     <ClCompile Include="src\Utilities\stbImageLoader\stbImageLoaderImpl.cpp">
       <Filter>Source Files\Utilities\stbImageLoader</Filter>
     </ClCompile>
-    <ClCompile Include="src\Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader\ShadersLoader.h">
@@ -67,12 +64,6 @@
     </ClInclude>
     <ClInclude Include="src\Utilities\stbImageLoader\stb_image.h">
       <Filter>Header Files\Utilities\stbImageLoader</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Define.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
