@@ -19,7 +19,7 @@ public:
 	void SetBool(const std::string &name, bool value) const;
 	void SetInt(const std::string &name, int value) const;
 	void SetFloat(const std::string &name, float value) const;
-	void SetMat4f(const std::string &name, float* value) const;
+	void SetMat4f(const std::string &name, const float* value) const;
 private:
 	int CompileShader(const char* shaderSource, GLuint type);
 	int LinkShaders(int vertexShaderId, int fragmentShaderId);
