@@ -74,56 +74,56 @@ int main()
 
 	//prepare vertex data to render
 	float vertices[] = {
-		//Positions       Colors             Texture coords
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //0
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, //1
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, //2
+		//Positions        //Norm vec
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, -1.0f, //0
+		0.5f, -0.5f, 0.0f, 0.0f, 0.0f, -1.0f, //1
+		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, -1.0f, //2
 		
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //0
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, //2
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //3
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, -1.0f, //0
+		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, -1.0f, //2
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, -1.0f, //3
 														 
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //0
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, //1
-		0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, //5
+		-0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, //0
+		0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, //1
+		0.5f, -0.5f, 1.0f, 0.0f, -1.0f, 0.0f, //5
 														
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //0
-		-0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, //4
-		0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, //5
+		-0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, //0
+		-0.5f, -0.5f, 1.0f, 0.0f, -1.0f, 0.0f, //4
+		0.5f, -0.5f, 1.0f, 0.0f, -1.0f, 0.0f, //5
 														 
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, //2
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //3
-		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //7
+		0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, //2
+		-0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, //3
+		-0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, //7
 													
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, //2
-		0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, //6
-		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //7
+		0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, //2
+		0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, //6
+		-0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, //7
 														
-		-0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, //4
-		0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, //5
-		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //7
+		-0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, //4
+		0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, //5
+		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, //7
 														
-		0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, //5
-		0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, //6
-		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //7
+		0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, //5
+		0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, //6
+		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, //7
 													
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //0
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //3
-		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //11
+		-0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, //0
+		-0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, //3
+		-0.5f, 0.5f, 1.0f, -1.0f, 0.0f, 0.0f, //11
 														
-		- 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //0
-		-0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, //8
-		-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //11
+		- 0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, //0
+		-0.5f, -0.5f, 1.0f, -1.0f, 0.0f, 0.0f, //8
+		-0.5f, 0.5f, 1.0f, -1.0f, 0.0f, 0.0f, //11
 		
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, //1
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, //2
-		0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, //10
+		0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, //1
+		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, //2
+		0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, //10
 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, //1
-		0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, //9
-		0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f //10		
+		0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, //1
+		0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, //9
+		0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f //10		
 	};
-
+	/*
 	unsigned int indices[] = {
 		0, 1, 2,
 		0, 2, 3,
@@ -138,7 +138,7 @@ int main()
 		0, 8, 11,
 		1, 2, 10,
 		1, 9, 10
-	};
+	};*/
 
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &VAO);
@@ -158,17 +158,20 @@ int main()
 	//Here is position attribute: the vertex attribute at location 0, have 3 values, type is FLOAT, shouldn't normalize,
 	//size of the stride to next vertex atrribute set is 6*sizeof(float),
 	//and offset of where the data begins in the buffer is 0
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	//Remember to enable these attribute at that location before render
 	glEnableVertexAttribArray(0);
-
+	//Normal vec attrib
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	/*
 	//Same with color attribute
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	//Texture attribute
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(2);*/
 
 
 
@@ -181,19 +184,12 @@ int main()
 	glBindVertexArray(lightVAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	lightingShaderLoader.EnableShaderProgram();
 	glm::vec3 objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
 	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-
-	glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-	glm::mat4 model = glm::mat4();
-	model = glm::translate(model, lightPos);
-	model = glm::scale(model, glm::vec3(0.2f));
-
-	lightingShaderLoader.SetMat4f("modelMat", glm::value_ptr(model));
 	/*----------------------*/
 
 	//Buffer could be Unbound after the attributes were registered
@@ -261,7 +257,7 @@ int main()
 
 	//Clones positions
 	glm::vec3 clonePositions[] = {
-		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(0.0f,  0.0f, 0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
 		glm::vec3(-1.5f, -2.2f, -2.5f),
 		glm::vec3(-3.8f, -2.0f, -12.3f),
@@ -308,18 +304,10 @@ int main()
 
 		//Update delta time for input handle
 		deltaTime = currentTime - lastTime;
-		lastTime = currentTime;
+		lastTime = currentTime;		
 
-		//Setup transform matrix
-		glm::mat4 transMat;
-		transMat = glm::rotate(transMat, glm::radians(alpha * 360.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		transMat = glm::scale(transMat, glm::vec3(alpha, alpha, alpha));
 
-		//Apply transform matrix
-		shadersLoader.SetMat4f("transformMat", glm::value_ptr(transMat));
-		shadersLoader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
-		shadersLoader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
-
+		glm::vec3 lightPos(sin(currentTime) * 3.0f, 1.0f, cos(currentTime) * 3.0f);
 		//Draw triangle part
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, containerTextureId);
@@ -330,12 +318,18 @@ int main()
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		//Apply transform matrix
+		//shadersLoader.SetMat4f("transformMat", glm::value_ptr(transMat));
+		shadersLoader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
+		shadersLoader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+		shadersLoader.SetVec3f("lightPos", glm::value_ptr(lightPos));
+		shadersLoader.SetVec3f("viewPos", glm::value_ptr(camera->GetViewPos()));
 		int clonesNumber = sizeof(clonePositions) / sizeof(*clonePositions);
 		for (unsigned int i = 0; i < clonesNumber; i++)
 		{
 			glm::mat4 modelMat;
 			modelMat = glm::translate(modelMat, clonePositions[i]);
-			modelMat = glm::rotate(modelMat, (i + 1) * currentTime * glm::radians(30.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+			//modelMat = glm::rotate(modelMat, (i + 1) * currentTime * glm::radians(30.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 			shadersLoader.SetMat4f("modelMat", glm::value_ptr(modelMat));
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -347,6 +341,11 @@ int main()
 
 		glm::mat4 projection = glm::perspective(glm::radians(LARGEST_FOV), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 modelMat = glm::mat4();
+		glm::mat4 model = glm::mat4();
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+
+		lightingShaderLoader.SetMat4f("modelMat", glm::value_ptr(model));
 		modelMat = glm::translate(modelMat, lightPos);
 		modelMat = glm::scale(modelMat, glm::vec3(0.2f));
 		lightingShaderLoader.SetMat4f("modelMat", glm::value_ptr(modelMat));
@@ -365,6 +364,7 @@ int main()
 
 	//Clean up before exit
     glDeleteVertexArrays(1, &VAO);
+	glDeleteVertexArrays(1, &lightVAO);
     glDeleteBuffers(1, &VBO);
 	glfwTerminate();
 

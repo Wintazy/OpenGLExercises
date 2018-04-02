@@ -20,6 +20,7 @@ public:
 	glm::mat4 GetProjectionMat();
 	glm::vec3 GetFrontCrossDir();
 	glm::vec3 GetFrontDir() { return m_frontDirVec; }
+	glm::vec3 GetViewPos() { return m_position; }
 	void MoveAlongDirection(float distance, glm::vec3 direction);
 	void UpdateAngles(float deltaYaw, float deltaPitch);
 	void UpdateFOV(float deltaAngle);
