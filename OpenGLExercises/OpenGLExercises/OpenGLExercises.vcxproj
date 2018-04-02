@@ -142,6 +142,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Data\Shaders\2DTo3D.vs" />
+    <None Include="..\Data\Shaders\Lighting.fs" />
+    <None Include="..\Data\Shaders\LightingSource.fs" />
     <None Include="..\Data\Shaders\Normal.vs" />
     <None Include="..\Data\Shaders\ApplyTexture.fs" />
     <None Include="..\Data\Shaders\Transform.vs" />

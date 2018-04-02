@@ -1,3 +1,4 @@
+/.vscode
 /OpenGLExercises/.vs
 /OpenGLExercises/Debug/*
 !/OpenGLExercises/Debug/OpenGLExercises.exe

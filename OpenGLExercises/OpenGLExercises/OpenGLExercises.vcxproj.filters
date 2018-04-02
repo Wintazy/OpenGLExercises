@@ -91,6 +91,12 @@
     <None Include="..\Data\Shaders\ApplyTexture.fs">
       <Filter>Data\Shaders</Filter>
     </None>
+    <None Include="..\Data\Shaders\Lighting.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\LightingSource.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Data\Textures\awesomeface.png">
