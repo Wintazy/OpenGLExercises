@@ -333,10 +333,9 @@ int main()
 		shadersLoader.SetVec3f("lightPos", glm::value_ptr(lightPos));
 		shadersLoader.SetVec3f("lightColor", glm::value_ptr(lightColor));
 		shadersLoader.SetVec3f("viewPos", glm::value_ptr(camera->GetViewPos()));
-		shadersLoader.SetVec3f("material.ambient", 1.0f, 0.5f, 0.31f);
-		shadersLoader.SetInt("material.diffuse", 0);
-		shadersLoader.SetInt("material.specular", 1);
-		shadersLoader.SetFloat("material.shininess", 32.0f);
+		shadersLoader.SetInt("materialDiffuse", 0);
+		shadersLoader.SetInt("materialSpecular", 1);
+		shadersLoader.SetFloat("materialShininess", 32.0f);
 		shadersLoader.SetVec3f("light.ambient", glm::value_ptr(ambientColor));
 		shadersLoader.SetVec3f("light.diffuse", glm::value_ptr(diffuseColor));
 		shadersLoader.SetVec3f("light.specular", 1.0f, 1.0f, 1.0f);
