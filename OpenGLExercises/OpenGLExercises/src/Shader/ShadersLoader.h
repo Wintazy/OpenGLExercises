@@ -21,6 +21,7 @@ public:
 	void SetFloat(const std::string &name, float value) const;
 	void SetMat4f(const std::string &name, const float* value) const;
 	void SetVec3f(const std::string &name, const float* value) const;
+	void SetVec3f(const std::string &name, float x, float y, float z) const;
 private:
 	int CompileShader(const char* shaderSource, GLuint type);
 	int LinkShaders(int vertexShaderId, int fragmentShaderId);

@@ -189,7 +189,6 @@ int main()
 
 	lightingShaderLoader.EnableShaderProgram();
 	glm::vec3 objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
-	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 	/*----------------------*/
 
 	//Buffer could be Unbound after the attributes were registered
@@ -250,7 +249,6 @@ int main()
 	//Activate shader before setting uniform
 	shadersLoader.EnableShaderProgram();
 	shadersLoader.SetVec3f("objectColor", glm::value_ptr(objectColor));
-	shadersLoader.SetVec3f("lightColor", glm::value_ptr(lightColor));
 
 	shadersLoader.SetInt("customTexture1", 0);
 	shadersLoader.SetInt("customTexture2", 1);
@@ -299,15 +297,17 @@ int main()
 		//Update uniform color
 		shadersLoader.EnableShaderProgram();
 		float currentTime = glfwGetTime();
-		float alpha = sin(currentTime) / 2.0f + 0.5f;
-		shadersLoader.SetFloat("customAlpha", alpha);
 
 		//Update delta time for input handle
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;		
 
-
+		//Update light source
 		glm::vec3 lightPos(sin(currentTime) * 3.0f, 1.0f, cos(currentTime) * 3.0f);
+		glm::vec3 lightColor = glm::vec3(sin(currentTime) * 2.0f, sin(currentTime) + 1.7f, sin(currentTime) * 1.3f);
+
+		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+		glm::vec3 ambientColor = lightColor * glm::vec3(0.2f);
 		//Draw triangle part
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, containerTextureId);
@@ -323,7 +323,16 @@ int main()
 		shadersLoader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
 		shadersLoader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
 		shadersLoader.SetVec3f("lightPos", glm::value_ptr(lightPos));
+		shadersLoader.SetVec3f("lightColor", glm::value_ptr(lightColor));
 		shadersLoader.SetVec3f("viewPos", glm::value_ptr(camera->GetViewPos()));
+		shadersLoader.SetVec3f("material.ambient", 1.0f, 0.5f, 0.31f);
+		shadersLoader.SetVec3f("material.diffuse", 1.0f, 0.5f, 0.31f);
+		shadersLoader.SetVec3f("material.specular", 0.5f, 0.5f, 0.5f);
+		shadersLoader.SetFloat("material.shininess", 32.0f);
+		shadersLoader.SetVec3f("light.ambient", glm::value_ptr(ambientColor));
+		shadersLoader.SetVec3f("light.diffuse", glm::value_ptr(diffuseColor));
+		shadersLoader.SetVec3f("light.specular", 1.0f, 1.0f, 1.0f);
+
 		int clonesNumber = sizeof(clonePositions) / sizeof(*clonePositions);
 		for (unsigned int i = 0; i < clonesNumber; i++)
 		{
@@ -351,6 +360,7 @@ int main()
 		lightingShaderLoader.SetMat4f("modelMat", glm::value_ptr(modelMat));
 		lightingShaderLoader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
 		lightingShaderLoader.SetMat4f("projectionMat", glm::value_ptr(projection));
+		lightingShaderLoader.SetVec3f("lightColor", glm::value_ptr(lightColor));
 		glBindVertexArray(lightVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		/*---Rendering end---*/
