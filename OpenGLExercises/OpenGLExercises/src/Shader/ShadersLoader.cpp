@@ -116,3 +116,8 @@ void ShadersLoader::SetVec3f(const std::string &name, float x, float y, float z)
 {
 	glUniform3f(glGetUniformLocation(m_shaderProgramId, name.c_str()), x, y, z);
 }
+
+void ShadersLoader::SetVec3f(const std::string &name, glm::vec3 i_vec3f) const
+{
+	glUniform3f(glGetUniformLocation(m_shaderProgramId, name.c_str()), i_vec3f.x, i_vec3f.y, i_vec3f.z);
+}

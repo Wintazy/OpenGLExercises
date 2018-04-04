@@ -2,6 +2,10 @@
 
 #include <glad\glad.h>
 
+#include <glm\glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
+#include <glm\gtc\type_ptr.hpp>
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -22,6 +26,7 @@ public:
 	void SetMat4f(const std::string &name, const float* value) const;
 	void SetVec3f(const std::string &name, const float* value) const;
 	void SetVec3f(const std::string &name, float x, float y, float z) const;
+	void SetVec3f(const std::string &name, glm::vec3 i_vec3f) const;
 private:
 	int CompileShader(const char* shaderSource, GLuint type);
 	int LinkShaders(int vertexShaderId, int fragmentShaderId);
