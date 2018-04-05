@@ -83,6 +83,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>GLFW_INCLUDE_NONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;assimpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -130,6 +131,8 @@
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Model\Mesh.cpp" />
+    <ClCompile Include="src\Model\Model.cpp" />
     <ClCompile Include="src\Shader\ShadersLoader.cpp" />
     <ClCompile Include="src\Utilities\glad\glad.c" />
     <ClCompile Include="src\Utilities\stbImageLoader\stbImageLoaderImpl.cpp" />
@@ -137,6 +140,8 @@
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Define.h" />
+    <ClInclude Include="src\Model\Mesh.h" />
+    <ClInclude Include="src\Model\Model.h" />
     <ClInclude Include="src\Shader\ShadersLoader.h" />
     <ClInclude Include="src\Utilities\stbImageLoader\stb_image.h" />
   </ItemGroup>
@@ -146,6 +151,7 @@
     <None Include="..\Data\Shaders\LightingSource.fs" />
     <None Include="..\Data\Shaders\Normal.vs" />
     <None Include="..\Data\Shaders\ApplyTexture.fs" />
+    <None Include="..\Data\Shaders\NormalModel.fs" />
     <None Include="..\Data\Shaders\Transform.vs" />
     <None Include="..\Data\Shaders\SlowlyFaded.fs" />
   </ItemGroup>

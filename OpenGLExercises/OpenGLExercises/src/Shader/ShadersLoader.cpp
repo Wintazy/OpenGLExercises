@@ -5,7 +5,7 @@ ShadersLoader::ShadersLoader()
 
 }
 
-void ShadersLoader::LoadShaders(const char* vetexShaderPath, const char* fragmentShaderPath)
+void ShadersLoader::LoadShaders(const GLchar* vetexShaderPath, const GLchar* fragmentShaderPath)
 {
 	std::string vertexShaderCode;
 	std::string fragmentShaderCode;

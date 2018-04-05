@@ -1,10 +1,10 @@
 #ifndef CAMERA_H
 #define CAMERA_H
+#include "Define.h"
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
 
-#include "Define.h"
 
 const float CAMERA_SPEED = 2.0f;
 const float MAX_CAMERA_PITCH = 89.9f;

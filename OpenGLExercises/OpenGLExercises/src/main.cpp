@@ -1,14 +1,8 @@
-#include <glad\glad.h>
-#include <GLFW\glfw3.h>
-
-#include <glm\glm.hpp>
-#include <glm\gtc\matrix_transform.hpp>
-#include <glm\gtc\type_ptr.hpp>
-
 #include <iostream>
 
-#include "Shader\ShadersLoader.h"
-#include "Utilities\stbImageLoader\stb_image.h"
+#include <GLFW\glfw3.h>
+
+#include "Model\Model.h"
 #include "Camera.h"
 
 const GLchar* VERTEX_SHADER_PATH = "../Data/Shaders/Normal.vs";
@@ -19,12 +13,15 @@ const GLchar* FADED_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
 const GLchar* FRAGMENT_SHADER_PATH = "../Data/Shaders/ApplyTexture.fs";
 const GLchar* LIGHTING_SHADER_PATH = "../Data/Shaders/Lighting.fs";
 const GLchar* LIGHTING_SOURCE_SHADER_PATH = "../Data/Shaders/LightingSource.fs";
+const GLchar* NORMAL_MODEL_SHADER_PATH = "../Data/Shaders/NormalModel.fs";
 
 const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/container.jpg";
 const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/awesomeface.png";
 
 const GLchar* CRATE_DIFFUSE_PATH = "../Data/LightingMaps/diffuse_wooden_crate.png";
 const GLchar* CRATE_SPECULAR_PATH = "../Data/LightingMaps/specular_wooden_crate.png";
+
+const char* NANO_SUIT_PATH = "../Data/Models/nanosuit/nanosuit.obj";
 
 float lastTime = 0.0f;
 float deltaTime = 0.0f;
@@ -75,8 +72,11 @@ int main()
 	glfwSetFramebufferSizeCallback(window, onFrameBufferSizeChanged);
 
 	ShadersLoader shadersLoader = ShadersLoader();
-	shadersLoader.LoadShaders(TRANSFORM_2D_3D_VERTEX_SHADER_PATH, LIGHTING_SHADER_PATH);
+	shadersLoader.LoadShaders(TRANSFORM_2D_3D_VERTEX_SHADER_PATH, NORMAL_MODEL_SHADER_PATH);
 
+	/*----Load data----*/
+	Model nanoSuitModel = Model(NANO_SUIT_PATH);
+	/*-----------------*/
 	//prepare vertex data to render
 	float vertices[] = {
 		//Positions			//Norm vec			//Tex coords
@@ -332,6 +332,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, crateSpecularId);
 
 		//Draw objects
+		/*
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -392,6 +393,19 @@ int main()
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+		*/
+
+		//Render loaded model
+		shadersLoader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
+		shadersLoader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+
+		glm::mat4 nanoSuitModelTransMat;
+		nanoSuitModelTransMat = glm::translate(nanoSuitModelTransMat, glm::vec3(0.0f, -1.75f, 0.0f));
+		nanoSuitModelTransMat = glm::scale(nanoSuitModelTransMat, glm::vec3(0.2f, 0.2f, 0.2f));
+		shadersLoader.SetMat4f("modelMat", glm::value_ptr(nanoSuitModelTransMat));
+
+		nanoSuitModel.Render(shadersLoader);
+		/*---Rendering end---*/
 
 		//Draw light source
 		
@@ -413,7 +427,6 @@ int main()
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-		/*---Rendering end---*/
 
 		//Swap color buffer used as output to the screen
 		glfwSwapBuffers(window);

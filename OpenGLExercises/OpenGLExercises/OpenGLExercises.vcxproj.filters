@@ -43,6 +43,12 @@
     <Filter Include="Data\Textures">
       <UniqueIdentifier>{b614c5ee-700a-43dc-9684-4e4d52205aff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Model">
+      <UniqueIdentifier>{0a26a096-46a9-4931-b989-eb5df5da0156}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Model">
+      <UniqueIdentifier>{6302c275-8a90-485b-bbb8-8562866605ec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Utilities\glad\glad.c">
@@ -60,6 +66,12 @@
     <ClCompile Include="src\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Model\Mesh.cpp">
+      <Filter>Source Files\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model\Model.cpp">
+      <Filter>Source Files\Model</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader\ShadersLoader.h">
@@ -73,6 +85,12 @@
     </ClInclude>
     <ClInclude Include="src\Define.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model\Mesh.h">
+      <Filter>Header Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model\Model.h">
+      <Filter>Header Files\Model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -95,6 +113,9 @@
       <Filter>Data\Shaders</Filter>
     </None>
     <None Include="..\Data\Shaders\LightingSource.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\NormalModel.fs">
       <Filter>Data\Shaders</Filter>
     </None>
   </ItemGroup>
