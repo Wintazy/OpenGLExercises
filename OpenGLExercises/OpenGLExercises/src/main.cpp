@@ -22,6 +22,7 @@ const GLchar* CRATE_DIFFUSE_PATH = "../Data/LightingMaps/diffuse_wooden_crate.pn
 const GLchar* CRATE_SPECULAR_PATH = "../Data/LightingMaps/specular_wooden_crate.png";
 
 const char* NANO_SUIT_PATH = "../Data/Models/nanosuit/nanosuit.obj";
+const char* AERITH_MODEL_PATH = "../Data/Models/crisis_core/Aerith.obj";
 
 float lastTime = 0.0f;
 float deltaTime = 0.0f;
@@ -75,7 +76,7 @@ int main()
 	shadersLoader.LoadShaders(TRANSFORM_2D_3D_VERTEX_SHADER_PATH, NORMAL_MODEL_SHADER_PATH);
 
 	/*----Load data----*/
-	Model nanoSuitModel = Model(NANO_SUIT_PATH);
+	Model customModel = Model(AERITH_MODEL_PATH);
 	/*-----------------*/
 	//prepare vertex data to render
 	float vertices[] = {
@@ -143,21 +144,14 @@ int main()
 		0, 8, 11,
 		1, 2, 10,
 		1, 9, 10
-	};*/
-
-	unsigned int VBO, VAO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+	};
+	*/
 	//glGenBuffers(1, &EBO);
 
 	//Bind vertext buffer and set buffer data
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindVertexArray(VAO);
 	/*
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	//Tell OpenGL how the hell it should read the vertex attributes data
 	//Here is position attribute: the vertex attribute at location 0, have 3 values, type is FLOAT, shouldn't normalize,
@@ -171,7 +165,7 @@ int main()
 	glEnableVertexAttribArray(1);
 	//Tex coord attrib
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(2);*/
 	/*
 	//Same with color attribute
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -184,6 +178,13 @@ int main()
 
 
 	/*--Setup light source--*/
+	unsigned int VBO, VAO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindVertexArray(VAO);
+
 	ShadersLoader lightingShaderLoader = ShadersLoader();
 	lightingShaderLoader.LoadShaders(TRANSFORM_2D_3D_VERTEX_SHADER_PATH, LIGHTING_SOURCE_SHADER_PATH);
 
@@ -191,7 +192,7 @@ int main()
 	glGenVertexArrays(1, &lightVAO);
 	glBindVertexArray(lightVAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
@@ -204,7 +205,7 @@ int main()
 	//So is the vertex array
 	glBindVertexArray(0);
 
-	/*---Load texture---*/
+	/*---Load texture---
 	unsigned int crateDiffuseId;
 	glGenTextures(1, &crateDiffuseId);
 	glBindTexture(GL_TEXTURE_2D, crateDiffuseId);
@@ -320,24 +321,25 @@ int main()
 		lastTime = currentTime;		
 
 		//Update light source
-		glm::vec3 lightPos(sin(currentTime) * 3.0f, 1.0f, cos(currentTime) * 3.0f);
+		glm::vec3 lightPos(sin(currentTime), 0.0f, cos(currentTime) - 1.0);
 		glm::vec3 lightColor = glm::vec3(2.0f, 1.7f, 1.3f);
 
 		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
 		glm::vec3 ambientColor = lightColor * glm::vec3(0.2f);
 		//Bind textures
+		/*
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, crateDiffuseId);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, crateSpecularId);
-
+		*/
 		//Draw objects
-		/*
+		
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		//Apply transform matrix
-		//shadersLoader.SetMat4f("transformMat", glm::value_ptr(transMat));
+		/*shadersLoader.SetMat4f("transformMat", glm::value_ptr(transMat));
 		shadersLoader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
 		shadersLoader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
 		shadersLoader.SetVec3f("lightColor", glm::value_ptr(lightColor));
@@ -398,13 +400,20 @@ int main()
 		//Render loaded model
 		shadersLoader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
 		shadersLoader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
-
+		shadersLoader.SetVec3f("light.position", glm::value_ptr(lightPos));
+		shadersLoader.SetVec3f("light.ambient", 0.5f, 0.5f, 0.5f);
+		shadersLoader.SetVec3f("light.diffuse", 0.8f, 0.8f, 0.8f);
+		shadersLoader.SetVec3f("light.specular", 1.0f, 1.0f, 1.0f);
+		shadersLoader.SetFloat("light.constant", 1.0f);
+		shadersLoader.SetFloat("light.linear", 0.09);
+		shadersLoader.SetFloat("light.quadratic", 0.002);
+		shadersLoader.SetVec3f("viewPos", glm::value_ptr(camera->GetViewPos()));
 		glm::mat4 nanoSuitModelTransMat;
 		nanoSuitModelTransMat = glm::translate(nanoSuitModelTransMat, glm::vec3(0.0f, -1.75f, 0.0f));
-		nanoSuitModelTransMat = glm::scale(nanoSuitModelTransMat, glm::vec3(0.2f, 0.2f, 0.2f));
+		nanoSuitModelTransMat = glm::scale(nanoSuitModelTransMat, glm::vec3(0.01f, 0.01f, 0.01f));
 		shadersLoader.SetMat4f("modelMat", glm::value_ptr(nanoSuitModelTransMat));
 
-		nanoSuitModel.Render(shadersLoader);
+		customModel.Render(shadersLoader);
 		/*---Rendering end---*/
 
 		//Draw light source
@@ -417,16 +426,13 @@ int main()
 		lightingShaderLoader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
 		lightingShaderLoader.SetMat4f("projectionMat", glm::value_ptr(projection));
 		lightingShaderLoader.SetVec3f("lightColor", glm::value_ptr(lightColor));
-		int pointLightsNumber = sizeof(pointLightPositions) / sizeof(*pointLightPositions);
-		for (int i = 0; i < pointLightsNumber; i++)
-		{
-			glm::mat4 modelMat;
-			modelMat = glm::translate(modelMat, pointLightPositions[i]);
-			modelMat = glm::scale(modelMat, glm::vec3(0.2f));
-			lightingShaderLoader.SetMat4f("modelMat", glm::value_ptr(modelMat));
+		
+		modelMat = glm::translate(modelMat, lightPos);
+		modelMat = glm::scale(modelMat, glm::vec3(0.2f));
+		lightingShaderLoader.SetMat4f("modelMat", glm::value_ptr(modelMat));
 
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		
 
 		//Swap color buffer used as output to the screen
 		glfwSwapBuffers(window);

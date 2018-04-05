@@ -1,4 +1,7 @@
 #pragma once
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include "..\Utilities\stbImageLoader\stb_image.h"
 #include "Mesh.h"

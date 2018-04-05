@@ -1,10 +1,6 @@
 #pragma once
 #include <vector>
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
 #include "../Shader/ShadersLoader.h"
 
 struct Vertex
@@ -18,7 +14,7 @@ struct Texture
 {
 	unsigned int m_id;
 	std::string m_type;
-	aiString m_path;
+	std::string m_path;
 };
 
 class Mesh
@@ -34,5 +30,5 @@ private:
 	std::vector<unsigned int> m_indices;
 	std::vector<Texture> m_textures;
 
-	unsigned int VAO, VBO, EBO;
+	unsigned int m_VAO, m_VBO, m_EBO;
 };

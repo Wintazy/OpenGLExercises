@@ -59,11 +59,14 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene *scene)
 		vertexAttrib.y = mesh->mVertices[i].y;
 		vertexAttrib.z = mesh->mVertices[i].z;
 		vertex.m_position = vertexAttrib;
-
-		vertexAttrib.x = mesh->mNormals[i].x;
-		vertexAttrib.y = mesh->mNormals[i].y;
-		vertexAttrib.z = mesh->mNormals[i].z;
-		vertex.m_normalVec = vertexAttrib;
+		
+		if(mesh->HasNormals())
+		{
+			vertexAttrib.x = mesh->mNormals[i].x;
+			vertexAttrib.y = mesh->mNormals[i].y;
+			vertexAttrib.z = mesh->mNormals[i].z;
+			vertex.m_normalVec = vertexAttrib;
+		}
 
 		if (mesh->mTextureCoords[0])
 		{
@@ -112,7 +115,7 @@ std::vector<Texture> Model::LoadMaterialTexture(aiMaterial* material, aiTextureT
 		bool isTextureLoaded = false;
 		for (unsigned int j = 0; j < m_loadedTextures.size(); j++)
 		{
-			if (std::strcmp(m_loadedTextures[j].m_path.data, texturePath.C_Str()) == 0)
+			if (std::strcmp(m_loadedTextures[j].m_path.c_str(), texturePath.C_Str()) == 0)
 			{
 				textures.push_back(m_loadedTextures[j]);
 				isTextureLoaded = true;
@@ -125,7 +128,7 @@ std::vector<Texture> Model::LoadMaterialTexture(aiMaterial* material, aiTextureT
 			Texture texture;
 			texture.m_id = LoadTextureFromFile(texturePath.C_Str(), m_path);
 			texture.m_type = typeName;
-			texture.m_path = texturePath;
+			texture.m_path = texturePath.C_Str();
 			textures.push_back(texture);
 		}
 	}
