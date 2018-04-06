@@ -24,6 +24,7 @@ public:
 	void MoveAlongDirection(float distance, glm::vec3 direction);
 	void UpdateAngles(float deltaYaw, float deltaPitch);
 	void UpdateFOV(float deltaAngle);
+	void SetPosition(glm::vec3 position) { m_position = position; }
 private:
 	float m_yawAngle, m_pitchAngle, m_fieldOfView;
 	float m_cameraSpeed;

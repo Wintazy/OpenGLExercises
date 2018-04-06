@@ -1,13 +1,22 @@
 #version 330
-in vec3 vertexColor;
-in vec2 TexCoord;
+in vec2 TexCoords;
 
-out vec4 fragColor;
+out vec4 FragColor;
 
 uniform sampler2D customTexture1;
-uniform sampler2D customTexture2;
+
+float near = 0.1; 
+float far  = 100.0; 
+
+float LinearizeDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0; // back to NDC 
+    return (2.0 * near * far) / (far + near - z * (far - near));	
+}
 
 void main()
 {
-	fragColor = mix(texture(customTexture1, TexCoord), texture(customTexture2, TexCoord), texture(customTexture2, TexCoord).a);
+	float depth = LinearizeDepth(gl_FragCoord.z) / 50; // divide by far for demonstration
+    FragColor = vec4(vec3(depth), 1.0);
+	//FragColor = texture(customTexture1, TexCoords);
 }
