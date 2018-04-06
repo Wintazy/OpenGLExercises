@@ -17,10 +17,10 @@
   </asset>
   <library_images>
     <image id="Map__2-image" name="Map__2">
-      <init_from>file://C:\Users\Chris\Desktop\Aerith\ffccdif_0.png</init_from>
+      <init_from>file://ffccdif_0.png</init_from>
     </image>
     <image id="Map__1-image" name="Map__1">
-      <init_from>file://C:\Users\Chris\Desktop\Aerith\ffccdif_1.png</init_from>
+      <init_from>file://ffccdif_1.png</init_from>
     </image>
   </library_images>
   <library_materials>
@@ -44,15 +44,6 @@
             </ambient>
             <diffuse>
               <texture texture="Map__2-image" texcoord="CHANNEL0">
-                <extra>
-                  <technique profile="MAYA">
-                    <wrapU sid="wrapU0">TRUE</wrapU>
-                    <wrapV sid="wrapV0">TRUE</wrapV>
-                    <blend_mode>ADD</blend_mode>
-                  </technique>
-                </extra>
-              </texture>
-              <texture texture="Map__1-image" texcoord="CHANNEL0">
                 <extra>
                   <technique profile="MAYA">
                     <wrapU sid="wrapU0">TRUE</wrapU>
@@ -95,7 +86,15 @@
               <color sid="ambient">0.588235  0.588235 0.588235 1.000000</color>
             </ambient>
             <diffuse>
-              <color sid="diffuse">0.588235  0.588235 0.588235 1.000000</color>
+              <texture texture="Map__1-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>ADD</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
             </diffuse>
             <specular>
               <color sid="specular">0.000000  0.000000 0.000000 1.000000</color>

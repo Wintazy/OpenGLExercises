@@ -16,7 +16,7 @@ void Model::Render(ShadersLoader shader)
 void Model::Init(std::string dataPath)
 {
 	Assimp::Importer dataImporter;
-	const aiScene* scene = dataImporter.ReadFile(dataPath, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene* scene = dataImporter.ReadFile(dataPath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PreTransformVertices);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
@@ -95,6 +95,14 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene *scene)
 	if (mesh->mMaterialIndex >= 0)
 	{
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+		//Debug info
+		std::cout << "***Material " << mesh->mMaterialIndex << "***" << std::endl;
+		std::cout << "aiTextureType_DIFFUSE " << material->GetTextureCount(aiTextureType_DIFFUSE) << std::endl;
+		std::cout << "aiTextureType_SPECULAR " << material->GetTextureCount(aiTextureType_SPECULAR) << std::endl;
+		std::cout << "aiTextureType_AMBIENT " << material->GetTextureCount(aiTextureType_AMBIENT) << std::endl;
+		std::cout << "aiTextureType_SHININESS " << material->GetTextureCount(aiTextureType_SHININESS) << std::endl;
+		std::cout << "*************" << std::endl;
 		std::vector<Texture> diffuseMaps = LoadMaterialTexture(material, aiTextureType_DIFFUSE, "texture_diffuse");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 

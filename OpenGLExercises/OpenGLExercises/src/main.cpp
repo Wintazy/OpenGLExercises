@@ -22,7 +22,7 @@ const GLchar* CRATE_DIFFUSE_PATH = "../Data/LightingMaps/diffuse_wooden_crate.pn
 const GLchar* CRATE_SPECULAR_PATH = "../Data/LightingMaps/specular_wooden_crate.png";
 
 const char* NANO_SUIT_PATH = "../Data/Models/nanosuit/nanosuit.obj";
-const char* AERITH_MODEL_PATH = "../Data/Models/crisis_core/Aerith.obj";
+const char* AERITH_MODEL_PATH = "../Data/Models/crisis_core/Aerith.DAE";
 
 float lastTime = 0.0f;
 float deltaTime = 0.0f;
@@ -408,10 +408,10 @@ int main()
 		shadersLoader.SetFloat("light.linear", 0.09);
 		shadersLoader.SetFloat("light.quadratic", 0.002);
 		shadersLoader.SetVec3f("viewPos", glm::value_ptr(camera->GetViewPos()));
-		glm::mat4 nanoSuitModelTransMat;
-		nanoSuitModelTransMat = glm::translate(nanoSuitModelTransMat, glm::vec3(0.0f, -1.75f, 0.0f));
-		nanoSuitModelTransMat = glm::scale(nanoSuitModelTransMat, glm::vec3(0.01f, 0.01f, 0.01f));
-		shadersLoader.SetMat4f("modelMat", glm::value_ptr(nanoSuitModelTransMat));
+		glm::mat4 customModelTransMat;
+		customModelTransMat = glm::translate(customModelTransMat, glm::vec3(0.0f, -0.5f, 0.0f));
+		customModelTransMat = glm::scale(customModelTransMat, glm::vec3(0.2f, 0.2f, 0.2f));
+		shadersLoader.SetMat4f("modelMat", glm::value_ptr(customModelTransMat));
 
 		customModel.Render(shadersLoader);
 		/*---Rendering end---*/

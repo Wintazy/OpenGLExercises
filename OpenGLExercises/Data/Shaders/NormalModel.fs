@@ -1,6 +1,7 @@
 #version 330
 in vec2 TexCoords;
 in vec3 FragPos;
+in vec3 NormVec;
 
 out vec4 FragColor;
 
