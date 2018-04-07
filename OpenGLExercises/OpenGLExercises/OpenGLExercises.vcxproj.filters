@@ -118,6 +118,15 @@
     <None Include="..\Data\Shaders\NormalModel.fs">
       <Filter>Data\Shaders</Filter>
     </None>
+    <None Include="..\Data\Shaders\Glyph.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\Glyph.vs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\DepthTest.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Data\Textures\awesomeface.png">

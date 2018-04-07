@@ -2,6 +2,8 @@
 /OpenGLExercises/.vs
 /OpenGLExercises/Debug/*
 !/OpenGLExercises/Debug/OpenGLExercises.exe
+!/OpenGLExercises/Debug/assimpd.dll
+!/OpenGLExercises/Debug/freetype.dll
 /OpenGLExercises/glfw-3.2.1/build/*
 !/OpenGLExercises/glfw-3.2.1/build/src
 /OpenGLExercises/glfw-3.2.1/build/src/*

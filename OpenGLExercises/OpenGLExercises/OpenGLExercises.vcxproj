@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)\assimp-3.1.1\include\;$(SolutionDir)\glfw-3.2.1\include\;$(ProjectDir)\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\glfw-3.2.1\build\src\Debug;$(SolutionDir)\assimp-3.1.1\build\code\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\libs\assimp-3.1.1\include\;$(SolutionDir)\libs\freetype-2.9\include\;$(SolutionDir)\libs\glfw-3.2.1\include\;$(ProjectDir)\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\libs\assimp-3.1.1;$(SolutionDir)\libs\freetype-2.9;$(SolutionDir)\libs\glfw-3.2.1;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)\glfw-3.2.1\include;$(ProjectDir)\include;$(IncludePath)</IncludePath>
@@ -86,7 +86,7 @@
       <PreprocessorDefinitions>GLFW_INCLUDE_NONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;assimpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimpd.lib;freetype.lib;glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -147,6 +147,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Data\Shaders\2DTo3D.vs" />
+    <None Include="..\Data\Shaders\DepthTest.fs" />
+    <None Include="..\Data\Shaders\Glyph.fs" />
+    <None Include="..\Data\Shaders\Glyph.vs" />
     <None Include="..\Data\Shaders\Lighting.fs" />
     <None Include="..\Data\Shaders\LightingSource.fs" />
     <None Include="..\Data\Shaders\Normal.vs" />
