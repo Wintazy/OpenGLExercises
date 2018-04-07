@@ -8,11 +8,12 @@
 #include "Model\Model.h"
 #include "Camera.h"
 
+//Vertex shaders
 const GLchar* NORMAL_VERTEX_SHADER_PATH = "../Data/Shaders/Normal.vs";
 const GLchar* TRANSFORM_VERTEX_SHADER_PATH = "../Data/Shaders/Transform.vs";
 const GLchar* TRANSFORM_2D_3D_VERTEX_SHADER_PATH = "../Data/Shaders/2dTo3d.vs";
 const GLchar* GLYPH_VERTEX_SHADER_PATH = "../Data/Shaders/Glyph.vs";
-
+//Fragment shaders
 const GLchar* FADED_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
 const GLchar* TEXTURE_FRAGMENT_SHADER_PATH = "../Data/Shaders/ApplyTexture.fs";
 const GLchar* LIGHTING_SHADER_PATH = "../Data/Shaders/Lighting.fs";
@@ -20,17 +21,18 @@ const GLchar* LIGHTING_SOURCE_SHADER_PATH = "../Data/Shaders/LightingSource.fs";
 const GLchar* NORMAL_MODEL_SHADER_PATH = "../Data/Shaders/NormalModel.fs";
 const GLchar* GLYPH_FRAG_SHADER_PATH = "../Data/Shaders/Glyph.fs";
 const GLchar* DEPTH_VISUAL_SHADER_PATH = "../Data/Shaders/DepthTest.fs";
-
+const GLchar* SINGLE_COLOR_SHADER_PATH = "../Data/Shaders/SingleColor.fs";
+//Textures
 const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/container.jpg";
 const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/awesomeface.png";
 const GLchar* NICE_TEXTURE_PATH = "../Data/Textures/Texture.png";
-
+//Lighting maps
 const GLchar* CRATE_DIFFUSE_PATH = "../Data/LightingMaps/diffuse_wooden_crate.png";
 const GLchar* CRATE_SPECULAR_PATH = "../Data/LightingMaps/specular_wooden_crate.png";
-
+//Models
 const char* NANO_SUIT_PATH = "../Data/Models/nanosuit/nanosuit.obj";
 const char* AERITH_MODEL_PATH = "../Data/Models/crisis_core/Aerith.DAE";
-
+//Fonts
 const char* FONT_PATH = "../Data/Fonts/arial.ttf";
 
 struct Character {
@@ -101,6 +103,9 @@ int main()
 
 	ShadersLoader depthVisualShader = ShadersLoader();
 	depthVisualShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, DEPTH_VISUAL_SHADER_PATH);
+
+	ShadersLoader singleColorShader = ShadersLoader();
+	singleColorShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, SINGLE_COLOR_SHADER_PATH);
 
 	/*----Load models data----*/
 	//Model customModel = Model(AERITH_MODEL_PATH);
@@ -199,7 +204,7 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	/*---Load texture---*/
-	unsigned int cubeTexture = LoadTexture(CONTAINER_TEXTURE_PATH);
+	unsigned int cubeTexture = LoadTexture(CRATE_DIFFUSE_PATH);
 	std::cout << "Load cubeTexture. glGetError: " << glGetError() << std::endl;
 	unsigned int floorTexture = LoadTexture(NICE_TEXTURE_PATH);	
 	std::cout << "Load floorTexture. glGetError: " << glGetError() << std::endl;
@@ -215,6 +220,10 @@ int main()
 
 	//Enable depth buffer
 	glEnable(GL_DEPTH_TEST);
+	//Enable stencil test
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	//Setup input mode
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPos(window, lastMousePosX, lastMousePosY);
@@ -300,7 +309,7 @@ int main()
 	std::string insText = "Press M to change depth test mode, V to visualize";
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_M, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_V, GLFW_RELEASE));
-	/*--Custom tweak END--*/
+	/*--Custom setup END--*/
 
 
 	//Render loop - keep running till window should stop
@@ -312,8 +321,8 @@ int main()
 		/*---Rendering part---*/
 		//Set color to clear screen with
 		glClearColor(0.2f, 0.3f, 0.3f, 0.1f);
-		//Clear color buffer and depth buffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//Clear color buffer, depth buffer, stencil buffer
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		float currentTime = glfwGetTime();
 
@@ -335,11 +344,21 @@ int main()
 
 		currentShader.EnableShaderProgram();
 		currentShader.SetInt("customTexture1", 0);
-		//Render loaded model
 		currentShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
 		currentShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
-
+		//
+		glStencilMask(0x00);
+		//floor
+		glBindVertexArray(planeVAO);
+		glBindTexture(GL_TEXTURE_2D, floorTexture);
+		currentShader.SetMat4f("modelMat", glm::value_ptr(glm::mat4()));
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+		//Enable stencil mask updating
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
 		//Cubes
+		
 		glm::mat4 model;
 		glBindVertexArray(cubeVAO);
 		glActiveTexture(GL_TEXTURE0);
@@ -352,14 +371,31 @@ int main()
 		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
 		currentShader.SetMat4f("modelMat", glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		//floor
-		glBindVertexArray(planeVAO);
-		glBindTexture(GL_TEXTURE_2D, floorTexture);
-		currentShader.SetMat4f("modelMat", glm::value_ptr(glm::mat4()));
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
-		//Render text
+		//Disable stencil mask updating
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		glDisable(GL_DEPTH_TEST);
+		//Draw 2 cubes again after scaled
+		singleColorShader.EnableShaderProgram();
+		glBindTexture(GL_TEXTURE_2D, cubeTexture);
+		singleColorShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
+		singleColorShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+		glBindVertexArray(cubeVAO);
+		model = glm::mat4();
+		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+		model = glm::scale(model, glm::vec3(1.1f));
+		singleColorShader.SetMat4f("modelMat", glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//2nd cube
+		model = glm::mat4();
+		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.1f));
+		singleColorShader.SetMat4f("modelMat", glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//
+		glStencilMask(0xFF);
+		glEnable(GL_DEPTH_TEST);
+		//Render text---------------
 		std::string cameraPos = "CameraPos: " + std::to_string(camera->GetViewPos().x) + " " + std::to_string(camera->GetViewPos().y) + " " + std::to_string(camera->GetViewPos().z);
 		RenderText(glyphShader, cameraPos, 5.0f, 5.0f, 0.4f, glm::vec3(0.5, 0.8f, 0.2f));
 

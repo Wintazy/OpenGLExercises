@@ -155,6 +155,7 @@
     <None Include="..\Data\Shaders\Normal.vs" />
     <None Include="..\Data\Shaders\ApplyTexture.fs" />
     <None Include="..\Data\Shaders\NormalModel.fs" />
+    <None Include="..\Data\Shaders\SingleColor.fs" />
     <None Include="..\Data\Shaders\Transform.vs" />
     <None Include="..\Data\Shaders\SlowlyFaded.fs" />
   </ItemGroup>
