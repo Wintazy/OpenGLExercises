@@ -48,10 +48,14 @@ std::map<GLchar, Character> Characters;
 bool isAlwaysPassDepthTest = false;
 bool isDepthVisualizedEnable = false;
 bool isStencilTestEnable = false;
+bool isCullFrontFace = false;
 std::map<int, int> KeyState;
 
-float lastTime = 0.0f;
+float lastFrameTime = 0.0f;
 float deltaTime = 0.0f;
+int frameCount = 0;
+int FPS;
+float secCount = 0;
 
 float lastMousePosX = SCREEN_WIDTH / 2;
 float lastMousePosY = SCREEN_HEIGHT / 2;
@@ -116,16 +120,16 @@ int main()
 	/*Prepare vertex data to render*/
 	float cubeVertices[] = {
 		//Positions			//Tex coords
-		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
 		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, //1
-		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
-		
 		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
 		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
+
+		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
+		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
 		-0.5f, 0.5f, 0.0f,	0.0f, 1.0f, //3
-														 
+
+		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, //1			 
 		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
-		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, //1
 		0.5f, -0.5f, 1.0f,	1.0f, 1.0f, //5
 														
 		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
@@ -137,8 +141,8 @@ int main()
 		-0.5f, 0.5f, 1.0f,	0.0f, 0.0f, //7
 													
 		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
-		0.5f, 0.5f, 1.0f,	1.0f, 0.0f, //6
 		-0.5f, 0.5f, 1.0f,	0.0f, 0.0f, //7
+		0.5f, 0.5f, 1.0f,	1.0f, 0.0f, //6
 														
 		-0.5f, -0.5f, 1.0f,	0.0f, 1.0f, //4
 		0.5f, -0.5f, 1.0f,	1.0f, 1.0f, //5
@@ -149,8 +153,8 @@ int main()
 		-0.5f, 0.5f, 1.0f,	0.0f, 0.0f, //7
 													
 		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
-		-0.5f, 0.5f, 0.0f,	0.0f, 1.0f, //3
 		-0.5f, 0.5f, 1.0f,	1.0f, 1.0f, //11
+		-0.5f, 0.5f, 0.0f,	0.0f, 1.0f, //3
 														
 		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
 		-0.5f, -0.5f, 1.0f,	1.0f, 0.0f, //8
@@ -160,26 +164,26 @@ int main()
 		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
 		0.5f, 0.5f, 1.0f,	0.0f, 1.0f, //10
 
-		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, //1
 		0.5f, -0.5f, 1.0f,	0.0f, 0.0f, //9
+		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, //1
 		0.5f, 0.5f, 1.0f,	0.0f, 1.0f //10
 	};
 
 	float planeVertices[] = {
 		// positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
-		5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
 		-5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+		5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
 		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
 
-		5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
 		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+		5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
 		5.0f, -0.5f, -5.0f,  2.0f, 2.0f
 	};
 
 	float grassVertices[] = {
 		//Pos				//Tex
-		0.0f, -0.5f, 0.0f,	0.0f, 1.0f,
 		0.0f, 0.5f, 0.0f,	0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f,	0.0f, 1.0f,
 		1.0f, -0.5f, 0.0f,	1.0f, 1.0f,
 
 		0.0f, 0.5f, 0.0f,	0.0f, 0.0f,
@@ -272,8 +276,6 @@ int main()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//Enable depth buffer
-	glEnable(GL_DEPTH_TEST);
 	//Setup input mode
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPos(window, lastMousePosX, lastMousePosY);
@@ -356,10 +358,11 @@ int main()
 	/*--Custom setup--*/
 	camera->SetPosition(glm::vec3(-3.0f, 3.0f, 5.0f));
 	camera->UpdateAngles(40.0f, -30.0f);
-	std::string insText = "Press M to change depth test mode, V to visualize, T to stencil test";
+	std::string insText = "Hot key. M: depth test mode, V: visualize, T: stencil test, C: cull_face mode";
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_M, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_V, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_T, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_C, GLFW_RELEASE));
 	/*--Custom setup END--*/
 
 	
@@ -369,6 +372,10 @@ int main()
 		//Handle all user input
 		processInput(window);
 
+		//Enable depth buffer
+		glEnable(GL_DEPTH_TEST);
+		//
+		glEnable(GL_CULL_FACE);
 
 		//Enable stencil test
 		if(isStencilTestEnable)
@@ -387,12 +394,31 @@ int main()
 		//Clear color buffer, depth buffer, stencil buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		float currentTime = glfwGetTime();
+		float currentFrameTime = glfwGetTime();
 
 		//Update delta time for input handle
-		deltaTime = currentTime - lastTime;
-		lastTime = currentTime;	
+		deltaTime = currentFrameTime - lastFrameTime;
+		lastFrameTime = currentFrameTime;
+		if (currentFrameTime - secCount >= 1)
+		{
+			secCount = currentFrameTime;
+			FPS = frameCount;
+			frameCount = 0;
+		}
+		else
+		{
+			++frameCount;
+		}
 
+		//Update cull mode
+		if (isCullFrontFace)
+		{
+			glCullFace(GL_FRONT);
+		}
+		else
+		{
+			glCullFace(GL_BACK);
+		}
 		//Update depth test mode
 		ShadersLoader currentShader;
 		if (isAlwaysPassDepthTest)
@@ -450,9 +476,11 @@ int main()
 			glStencilMask(0x00);
 		//Render text---------------
 		std::string cameraPos = "CameraPos: " + std::to_string(camera->GetViewPos().x) + " " + std::to_string(camera->GetViewPos().y) + " " + std::to_string(camera->GetViewPos().z);
-		RenderText(glyphShader, cameraPos, 5.0f, 5.0f, 0.4f, glm::vec3(0.5, 0.8f, 0.2f));
+		RenderText(glyphShader, cameraPos, 5.0f, 5.0f, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
 
-		RenderText(glyphShader, insText, 5.0f, TEXT_TOP_SCREEN_OFFSET, 0.4f, glm::vec3(0.5, 0.8f, 0.2f));
+		RenderText(glyphShader, insText, 5.0f, TEXT_TOP_SCREEN_OFFSET, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
+
+		RenderText(glyphShader, "FPS: " + std::to_string(FPS), 5.0f, 5.0f + TEXT_PADDING, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
 		//
 		if (isStencilTestEnable)
 		{
@@ -485,6 +513,7 @@ int main()
 		}
 
 		//Grasses
+		glDisable(GL_CULL_FACE);
 		currentShader.EnableShaderProgram();
 		glBindVertexArray(grassVAO);
 		glBindTexture(GL_TEXTURE_2D, grassTexture);
@@ -570,6 +599,12 @@ void processInput(GLFWwindow *window)
 		KeyState[GLFW_KEY_T] = glfwGetKey(window, GLFW_KEY_T);
 		if (KeyState[GLFW_KEY_T] == GLFW_RELEASE)
 			isStencilTestEnable = !isStencilTestEnable;
+	}
+	if (KeyState[GLFW_KEY_C] != glfwGetKey(window, GLFW_KEY_C))
+	{
+		KeyState[GLFW_KEY_C] = glfwGetKey(window, GLFW_KEY_C);
+		if (KeyState[GLFW_KEY_C] == GLFW_RELEASE)
+			isCullFrontFace = !isCullFrontFace;
 	}
 }
 
