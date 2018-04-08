@@ -26,6 +26,8 @@ const GLchar* SINGLE_COLOR_SHADER_PATH = "../Data/Shaders/SingleColor.fs";
 const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/container.jpg";
 const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/awesomeface.png";
 const GLchar* NICE_TEXTURE_PATH = "../Data/Textures/Texture.png";
+const GLchar* GRASS_TEXTURE_PATH = "../Data/Textures/grass.png";
+const GLchar* GLASS_WINDOW_TEXTURE_PATH = "../Data/Textures/blending_transparent_window.png";
 //Lighting maps
 const GLchar* CRATE_DIFFUSE_PATH = "../Data/LightingMaps/diffuse_wooden_crate.png";
 const GLchar* CRATE_SPECULAR_PATH = "../Data/LightingMaps/specular_wooden_crate.png";
@@ -45,6 +47,7 @@ std::map<GLchar, Character> Characters;
 
 bool isAlwaysPassDepthTest = false;
 bool isDepthVisualizedEnable = false;
+bool isStencilTestEnable = false;
 std::map<int, int> KeyState;
 
 float lastTime = 0.0f;
@@ -57,7 +60,7 @@ void onFrameBufferSizeChanged(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 void onMousePosChanged(GLFWwindow *window, double posX, double posY);
 void onMouseScrolled(GLFWwindow *window, double offsetX, double offsetY);
-unsigned int LoadTexture(const char * path);
+unsigned int LoadTexture(const char * path, GLuint wrappMethod = GL_REPEAT);
 void RenderText(ShadersLoader &shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
 
 Camera* camera = new Camera();
@@ -110,7 +113,7 @@ int main()
 	/*----Load models data----*/
 	//Model customModel = Model(AERITH_MODEL_PATH);
 	/*-----------------*/
-	//prepare vertex data to render
+	/*Prepare vertex data to render*/
 	float cubeVertices[] = {
 		//Positions			//Tex coords
 		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
@@ -172,6 +175,26 @@ int main()
 		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
 		5.0f, -0.5f, -5.0f,  2.0f, 2.0f
 	};
+
+	float grassVertices[] = {
+		//Pos				//Tex
+		0.0f, -0.5f, 0.0f,	0.0f, 1.0f,
+		0.0f, 0.5f, 0.0f,	0.0f, 0.0f,
+		1.0f, -0.5f, 0.0f,	1.0f, 1.0f,
+
+		0.0f, 0.5f, 0.0f,	0.0f, 0.0f,
+		1.0f, -0.5f, 0.0f,	1.0f, 1.0f,
+		1.0f, 0.5f, 0.0f,	1.0f, 0.0f
+	};
+
+	float lineVertices[] = {
+		5.0f, 0.0f, 0.0f,
+		-5.0f, 0.0f, 0.0f,
+		0.0f, 5.0f, 0.0f,
+		0.0f, -5.0f, 0.0f,
+		0.0f, 0.0f, 5.0f,
+		0.0f, 0.0f, -5.0f,
+	};
 	// cube VAO
 	unsigned int cubeVAO, cubeVBO;
 	glGenVertexArrays(1, &cubeVAO);
@@ -198,16 +221,47 @@ int main()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glBindVertexArray(0);
 	std::cout << "Init plane VAO. glGetError: " << glGetError() << std::endl;
-	
-
 	//Buffer could be Unbound after the attributes were registered
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//Grasses
+	std::vector<glm::vec3> grasses;
+	grasses.push_back(glm::vec3(-1.5f, 0.0f, 0.1f));
+	grasses.push_back(glm::vec3(1.5f, 0.0f, 1.51f));
+	grasses.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+	grasses.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+	grasses.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+
+	unsigned int grassVAO, grassVBO;
+	glGenVertexArrays(1, &grassVAO);
+	glGenBuffers(1, &grassVBO);
+	glBindVertexArray(grassVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(grassVertices), &grassVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glBindVertexArray(0);
+	std::cout << "Init grass VAO. glGetError: " << glGetError() << std::endl;
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//Axes
+	unsigned int axesVAO, axesVBO;
+	glGenVertexArrays(1, &axesVAO);
+	glGenBuffers(1, &axesVBO);
+	glBindVertexArray(axesVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, axesVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(lineVertices), &lineVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	/*Prepare vertex data to render END*/
 
 	/*---Load texture---*/
 	unsigned int cubeTexture = LoadTexture(CRATE_DIFFUSE_PATH);
 	std::cout << "Load cubeTexture. glGetError: " << glGetError() << std::endl;
 	unsigned int floorTexture = LoadTexture(NICE_TEXTURE_PATH);	
 	std::cout << "Load floorTexture. glGetError: " << glGetError() << std::endl;
+	unsigned int grassTexture = LoadTexture(GLASS_WINDOW_TEXTURE_PATH, GL_CLAMP_TO_EDGE);
+	std::cout << "Load grassTexture. glGetError: " << glGetError() << std::endl;
 	/*---Load texture end---*/
 
 	/*--Bind texture to shader--*/
@@ -220,10 +274,6 @@ int main()
 
 	//Enable depth buffer
 	glEnable(GL_DEPTH_TEST);
-	//Enable stencil test
-	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	//Setup input mode
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPos(window, lastMousePosX, lastMousePosY);
@@ -306,18 +356,31 @@ int main()
 	/*--Custom setup--*/
 	camera->SetPosition(glm::vec3(-3.0f, 3.0f, 5.0f));
 	camera->UpdateAngles(40.0f, -30.0f);
-	std::string insText = "Press M to change depth test mode, V to visualize";
+	std::string insText = "Press M to change depth test mode, V to visualize, T to stencil test";
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_M, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_V, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_T, GLFW_RELEASE));
 	/*--Custom setup END--*/
 
-
+	
 	//Render loop - keep running till window should stop
 	while (!glfwWindowShouldClose(window))
 	{
 		//Handle all user input
 		processInput(window);
 
+
+		//Enable stencil test
+		if(isStencilTestEnable)
+		{
+			glEnable(GL_STENCIL_TEST);
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+		}
+		else
+		{
+			glDisable(GL_STENCIL_TEST);
+		}
 		/*---Rendering part---*/
 		//Set color to clear screen with
 		glClearColor(0.2f, 0.3f, 0.3f, 0.1f);
@@ -347,22 +410,32 @@ int main()
 		currentShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
 		currentShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
 		//
-		glStencilMask(0x00);
+		if(isStencilTestEnable)
+			glStencilMask(0x00);
+		//Axes
+		glBindVertexArray(axesVAO);
+		glBindTexture(GL_TEXTURE_2D, floorTexture);
+		currentShader.SetMat4f("modelMat", glm::value_ptr(glm::mat4()));
+		glDrawArrays(GL_LINES, 0, 6);
+		glBindVertexArray(0);
 		//floor
+		glm::mat4 model;
 		glBindVertexArray(planeVAO);
 		glBindTexture(GL_TEXTURE_2D, floorTexture);
 		currentShader.SetMat4f("modelMat", glm::value_ptr(glm::mat4()));
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
-		//Enable stencil mask updating
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilMask(0xFF);
 		//Cubes
-		
-		glm::mat4 model;
+		if (isStencilTestEnable)
+		{
+			//Enable stencil mask updating
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+		}
 		glBindVertexArray(cubeVAO);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, cubeTexture);
+		model = glm::mat4();
 		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
 		currentShader.SetMat4f("modelMat", glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -371,35 +444,65 @@ int main()
 		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
 		currentShader.SetMat4f("modelMat", glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//Disable stencil mask updating
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-		glDisable(GL_DEPTH_TEST);
-		//Draw 2 cubes again after scaled
-		singleColorShader.EnableShaderProgram();
-		glBindTexture(GL_TEXTURE_2D, cubeTexture);
-		singleColorShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
-		singleColorShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
-		glBindVertexArray(cubeVAO);
-		model = glm::mat4();
-		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-		model = glm::scale(model, glm::vec3(1.1f));
-		singleColorShader.SetMat4f("modelMat", glm::value_ptr(model));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//2nd cube
-		model = glm::mat4();
-		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.1f));
-		singleColorShader.SetMat4f("modelMat", glm::value_ptr(model));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
 		//
-		glStencilMask(0xFF);
-		glEnable(GL_DEPTH_TEST);
+		if (isStencilTestEnable)
+			glStencilMask(0x00);
 		//Render text---------------
 		std::string cameraPos = "CameraPos: " + std::to_string(camera->GetViewPos().x) + " " + std::to_string(camera->GetViewPos().y) + " " + std::to_string(camera->GetViewPos().z);
 		RenderText(glyphShader, cameraPos, 5.0f, 5.0f, 0.4f, glm::vec3(0.5, 0.8f, 0.2f));
 
 		RenderText(glyphShader, insText, 5.0f, TEXT_TOP_SCREEN_OFFSET, 0.4f, glm::vec3(0.5, 0.8f, 0.2f));
+		//
+		if (isStencilTestEnable)
+		{
+			//Disable stencil mask updating
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilMask(0x00);
+			glDisable(GL_DEPTH_TEST);
+			//Draw 2 cubes again after scaled
+			singleColorShader.EnableShaderProgram();
+			glBindTexture(GL_TEXTURE_2D, cubeTexture);
+			singleColorShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
+			singleColorShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+			glBindVertexArray(cubeVAO);
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+			model = glm::scale(model, glm::vec3(1.1f));
+			singleColorShader.SetMat4f("modelMat", glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			//2nd cube
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.1f));
+			singleColorShader.SetMat4f("modelMat", glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+			//
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+			glEnable(GL_DEPTH_TEST);
+		}
+
+		//Grasses
+		currentShader.EnableShaderProgram();
+		glBindVertexArray(grassVAO);
+		glBindTexture(GL_TEXTURE_2D, grassTexture);
+		std::map<float, glm::vec3> sorted;
+		for (unsigned int i = 0; i < grasses.size(); i++)
+		{
+			float distance = glm::length(camera->GetViewPos() - grasses[i]);
+			sorted[distance] = grasses[i];
+		}
+		for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+		{
+			model = glm::mat4();
+			model = glm::translate(model, it->second);
+			currentShader.SetMat4f("modelMat", glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+		glBindVertexArray(0);
+
 		/*---Rendering end---*/
 		
 
@@ -462,6 +565,12 @@ void processInput(GLFWwindow *window)
 		if (KeyState[GLFW_KEY_V] == GLFW_RELEASE)
 			isDepthVisualizedEnable = !isDepthVisualizedEnable;
 	}
+	if (KeyState[GLFW_KEY_T] != glfwGetKey(window, GLFW_KEY_T))
+	{
+		KeyState[GLFW_KEY_T] = glfwGetKey(window, GLFW_KEY_T);
+		if (KeyState[GLFW_KEY_T] == GLFW_RELEASE)
+			isStencilTestEnable = !isStencilTestEnable;
+	}
 }
 
 void onMousePosChanged(GLFWwindow *window, double posX, double posY)
@@ -479,7 +588,7 @@ void onMouseScrolled(GLFWwindow *window, double offetX, double offsetY)
 	camera->UpdateFOV(offsetY);
 }
 
-unsigned int LoadTexture(char const *path)
+unsigned int LoadTexture(char const *path, GLuint wrappMethod)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -499,9 +608,9 @@ unsigned int LoadTexture(char const *path)
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappMethod);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappMethod);
+		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
