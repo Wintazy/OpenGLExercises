@@ -13,6 +13,7 @@ const GLchar* NORMAL_VERTEX_SHADER_PATH = "../Data/Shaders/Normal.vs";
 const GLchar* TRANSFORM_VERTEX_SHADER_PATH = "../Data/Shaders/Transform.vs";
 const GLchar* TRANSFORM_2D_3D_VERTEX_SHADER_PATH = "../Data/Shaders/2dTo3d.vs";
 const GLchar* GLYPH_VERTEX_SHADER_PATH = "../Data/Shaders/Glyph.vs";
+const GLchar* SCREEN_VERTEX_SHADER_PATH = "../Data/Shaders/TextureBuffer.vs";
 //Fragment shaders
 const GLchar* FADED_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
 const GLchar* TEXTURE_FRAGMENT_SHADER_PATH = "../Data/Shaders/ApplyTexture.fs";
@@ -22,6 +23,8 @@ const GLchar* NORMAL_MODEL_SHADER_PATH = "../Data/Shaders/NormalModel.fs";
 const GLchar* GLYPH_FRAG_SHADER_PATH = "../Data/Shaders/Glyph.fs";
 const GLchar* DEPTH_VISUAL_SHADER_PATH = "../Data/Shaders/DepthTest.fs";
 const GLchar* SINGLE_COLOR_SHADER_PATH = "../Data/Shaders/SingleColor.fs";
+const GLchar* SCREEN_FRAG_SHADER_PATH = "../Data/Shaders/ScreenBuffer.fs";
+const GLchar* EDGE_DETECT_SHADER_PATH = "../Data/Shaders/EdgeDetect.fs";
 //Textures
 const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/container.jpg";
 const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/awesomeface.png";
@@ -49,6 +52,7 @@ bool isAlwaysPassDepthTest = false;
 bool isDepthVisualizedEnable = false;
 bool isStencilTestEnable = false;
 bool isCullFrontFace = false;
+bool isEdgeDetectEnable = false;
 std::map<int, int> KeyState;
 
 float lastFrameTime = 0.0f;
@@ -198,6 +202,17 @@ int main()
 		0.0f, -5.0f, 0.0f,
 		0.0f, 0.0f, 5.0f,
 		0.0f, 0.0f, -5.0f,
+	};
+
+	float quadVertices[] = {
+		//Position		//TexCoords
+		-1.0f, -1.0f,	0.0f, 0.0f,
+		1.0f, -1.0f,	1.0f, 0.0f,
+		-1.0f, 1.0f,	0.0f, 1.0f,
+
+		1.0f, -1.0f,	1.0f, 0.0f,
+		1.0f, 1.0f,		1.0f, 1.0f,
+		-1.0f, 1.0f,	0.0f, 1.0f
 	};
 	// cube VAO
 	unsigned int cubeVAO, cubeVBO;
@@ -358,20 +373,65 @@ int main()
 	/*--Custom setup--*/
 	camera->SetPosition(glm::vec3(-3.0f, 3.0f, 5.0f));
 	camera->UpdateAngles(40.0f, -30.0f);
-	std::string insText = "Hot key. M: depth test mode, V: visualize, T: stencil test, C: cull_face mode";
+	std::string insText = "Hot key. M: depth test mode, V: visualize, T: stencil test, C: cull_face mode, E: Edge detecting mode";
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_M, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_V, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_T, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_C, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_E, GLFW_RELEASE));
 	/*--Custom setup END--*/
 
+	/*--Texture buffer setup--*/
+	unsigned int frameBuffer;
+	glGenFramebuffers(1, &frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	unsigned int texColorBuffer = LoadTexture(nullptr);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER , GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER: Framebuffer is not complete " << std::endl;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	unsigned int quadVAO, quadVBO;
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+	glBindVertexArray(quadVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	ShadersLoader screenShader = ShadersLoader();
+	screenShader.LoadShaders(SCREEN_VERTEX_SHADER_PATH, SCREEN_FRAG_SHADER_PATH);
+	screenShader.EnableShaderProgram();
+	screenShader.SetInt("screenTexture", 0);
+	ShadersLoader edgeDetectShader = ShadersLoader();
+	edgeDetectShader.LoadShaders(SCREEN_VERTEX_SHADER_PATH, EDGE_DETECT_SHADER_PATH);
+	edgeDetectShader.EnableShaderProgram();
+	edgeDetectShader.SetInt("screenTexture", 0);
+	/*--Texture buffer setup END--*/
 	
 	//Render loop - keep running till window should stop
 	while (!glfwWindowShouldClose(window))
 	{
 		//Handle all user input
 		processInput(window);
-
+		//Bind framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+		//Clear color buffer, depth buffer
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClearColor(0.2f, 0.3f, 0.3f, 0.1f);
 		//Enable depth buffer
 		glEnable(GL_DEPTH_TEST);
 		//
@@ -389,10 +449,6 @@ int main()
 			glDisable(GL_STENCIL_TEST);
 		}
 		/*---Rendering part---*/
-		//Set color to clear screen with
-		glClearColor(0.2f, 0.3f, 0.3f, 0.1f);
-		//Clear color buffer, depth buffer, stencil buffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		float currentFrameTime = glfwGetTime();
 
@@ -474,14 +530,6 @@ int main()
 		//
 		if (isStencilTestEnable)
 			glStencilMask(0x00);
-		//Render text---------------
-		std::string cameraPos = "CameraPos: " + std::to_string(camera->GetViewPos().x) + " " + std::to_string(camera->GetViewPos().y) + " " + std::to_string(camera->GetViewPos().z);
-		RenderText(glyphShader, cameraPos, 5.0f, 5.0f, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
-
-		RenderText(glyphShader, insText, 5.0f, TEXT_TOP_SCREEN_OFFSET, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
-
-		RenderText(glyphShader, "FPS: " + std::to_string(FPS), 5.0f, 5.0f + TEXT_PADDING, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
-		//
 		if (isStencilTestEnable)
 		{
 			//Disable stencil mask updating
@@ -532,11 +580,34 @@ int main()
 		}
 		glBindVertexArray(0);
 
+		//Pass default framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		if (isEdgeDetectEnable)
+			edgeDetectShader.EnableShaderProgram();
+		else
+			screenShader.EnableShaderProgram();
+		glBindVertexArray(quadVAO);
+		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+		//Render text---------------
+		std::string cameraPos = "CameraPos: " + std::to_string(camera->GetViewPos().x) + " " + std::to_string(camera->GetViewPos().y) + " " + std::to_string(camera->GetViewPos().z);
+		RenderText(glyphShader, cameraPos, 5.0f, 5.0f, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
+
+		RenderText(glyphShader, insText, 5.0f, TEXT_TOP_SCREEN_OFFSET, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
+
+		RenderText(glyphShader, "FPS: " + std::to_string(FPS), 5.0f, 5.0f + TEXT_PADDING, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
+		//
 		/*---Rendering end---*/
 		
 
 		//Swap color buffer used as output to the screen
 		glfwSwapBuffers(window);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
 		//Handle any events are triggered
 		glfwPollEvents();
 	}
@@ -545,8 +616,12 @@ int main()
 	//Clean up before exit
     glDeleteVertexArrays(1, &cubeVAO);
 	glDeleteVertexArrays(1, &planeVAO);
+	glDeleteVertexArrays(1, &grassVAO);
+	glDeleteVertexArrays(1, &quadVAO);
     glDeleteBuffers(1, &cubeVBO);
 	glDeleteBuffers(1, &planeVBO);	
+	glDeleteBuffers(1, &grassVBO);
+	glDeleteBuffers(1, &quadVBO);
 	glfwTerminate();
 
 	//Application end
@@ -606,6 +681,12 @@ void processInput(GLFWwindow *window)
 		if (KeyState[GLFW_KEY_C] == GLFW_RELEASE)
 			isCullFrontFace = !isCullFrontFace;
 	}
+	if (KeyState[GLFW_KEY_E] != glfwGetKey(window, GLFW_KEY_E))
+	{
+		KeyState[GLFW_KEY_E] = glfwGetKey(window, GLFW_KEY_E);
+		if (KeyState[GLFW_KEY_E] == GLFW_RELEASE)
+			isEdgeDetectEnable = !isEdgeDetectEnable;
+	}
 }
 
 void onMousePosChanged(GLFWwindow *window, double posX, double posY)
@@ -628,34 +709,46 @@ unsigned int LoadTexture(char const *path, GLuint wrappMethod)
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 
-	int width, height, nrComponents;
-	unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-	if (data)
+	int width, height;
+	int nrComponents = -1;
+	unsigned char *data;
+	if (path == nullptr)
 	{
-		GLenum format;
-		if (nrComponents == 1)
-			format = GL_RED;
-		else if (nrComponents == 3)
-			format = GL_RGB;
-		else if (nrComponents == 4)
-			format = GL_RGBA;
-
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappMethod);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappMethod);
-		
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		stbi_image_free(data);
+		data = nullptr;
+		std::cout << "Generating empty texture" << std::endl;
 	}
 	else
 	{
-		std::cout << "Texture failed to load at path: " << path << std::endl;
-		stbi_image_free(data);
+		data = stbi_load(path, &width, &height, &nrComponents, 0);
 	}
+
+	GLenum format;
+	if (nrComponents == 1)
+		format = GL_RED;
+	else if (nrComponents == 3)
+		format = GL_RGB;
+	else if (nrComponents == 4)
+		format = GL_RGBA;
+	else if (nrComponents == -1)
+		format = GL_RGB;
+
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	if (data == nullptr)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, format, SCREEN_WIDTH, SCREEN_HEIGHT, 0, format, GL_UNSIGNED_BYTE, NULL);
+	}
+	else
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	}
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappMethod);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappMethod);
+		
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	stbi_image_free(data);
 
 	return textureID;
 }

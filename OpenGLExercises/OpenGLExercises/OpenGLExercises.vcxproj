@@ -148,6 +148,7 @@
   <ItemGroup>
     <None Include="..\Data\Shaders\2DTo3D.vs" />
     <None Include="..\Data\Shaders\DepthTest.fs" />
+    <None Include="..\Data\Shaders\EdgeDetect.fs" />
     <None Include="..\Data\Shaders\Glyph.fs" />
     <None Include="..\Data\Shaders\Glyph.vs" />
     <None Include="..\Data\Shaders\Lighting.fs" />
@@ -155,7 +156,9 @@
     <None Include="..\Data\Shaders\Normal.vs" />
     <None Include="..\Data\Shaders\ApplyTexture.fs" />
     <None Include="..\Data\Shaders\NormalModel.fs" />
+    <None Include="..\Data\Shaders\ScreenBuffer.fs" />
     <None Include="..\Data\Shaders\SingleColor.fs" />
+    <None Include="..\Data\Shaders\TextureBuffer.vs" />
     <None Include="..\Data\Shaders\Transform.vs" />
     <None Include="..\Data\Shaders\SlowlyFaded.fs" />
   </ItemGroup>

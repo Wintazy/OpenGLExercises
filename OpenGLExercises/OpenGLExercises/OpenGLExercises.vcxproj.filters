@@ -130,6 +130,15 @@
     <None Include="..\Data\Shaders\SingleColor.fs">
       <Filter>Data\Shaders</Filter>
     </None>
+    <None Include="..\Data\Shaders\TextureBuffer.vs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\ScreenBuffer.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\EdgeDetect.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Data\Textures\awesomeface.png">
