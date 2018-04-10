@@ -158,6 +158,8 @@
     <None Include="..\Data\Shaders\NormalModel.fs" />
     <None Include="..\Data\Shaders\ScreenBuffer.fs" />
     <None Include="..\Data\Shaders\SingleColor.fs" />
+    <None Include="..\Data\Shaders\Skybox.fs" />
+    <None Include="..\Data\Shaders\Skybox.vs" />
     <None Include="..\Data\Shaders\TextureBuffer.vs" />
     <None Include="..\Data\Shaders\Transform.vs" />
     <None Include="..\Data\Shaders\SlowlyFaded.fs" />

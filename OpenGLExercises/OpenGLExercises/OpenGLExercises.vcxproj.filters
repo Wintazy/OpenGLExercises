@@ -139,6 +139,12 @@
     <None Include="..\Data\Shaders\EdgeDetect.fs">
       <Filter>Data\Shaders</Filter>
     </None>
+    <None Include="..\Data\Shaders\Skybox.vs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\Skybox.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Data\Textures\awesomeface.png">
