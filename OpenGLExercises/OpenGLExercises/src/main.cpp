@@ -44,12 +44,12 @@ const char* FONT_PATH = "../Data/Fonts/arial.ttf";
 //Cubemap
 const std::vector<std::string> CUBE_FACES_PATH
 {
-	"../Data/Textures/CubeTextures/mp_downunder/down-under_rt.tga",
-	"../Data/Textures/CubeTextures/mp_downunder/down-under_lf.tga",
-	"../Data/Textures/CubeTextures/mp_downunder/down-under_up.tga",
-	"../Data/Textures/CubeTextures/mp_downunder/down-under_dn.tga",
-	"../Data/Textures/CubeTextures/mp_downunder/down-under_ft.tga",
-	"../Data/Textures/CubeTextures/mp_downunder/down-under_bk.tga"
+	"../Data/Textures/CubeTextures/interstellar/interstellar_lf.tga",
+	"../Data/Textures/CubeTextures/interstellar/interstellar_rt.tga",
+	"../Data/Textures/CubeTextures/interstellar/interstellar_up.tga",
+	"../Data/Textures/CubeTextures/interstellar/interstellar_dn.tga",
+	"../Data/Textures/CubeTextures/interstellar/interstellar_ft.tga",
+	"../Data/Textures/CubeTextures/interstellar/interstellar_bk.tga"
 };
 
 struct Character {
@@ -509,8 +509,8 @@ int main()
 		//
 		glEnable(GL_CULL_FACE);
 		//Clear color buffer, depth buffer
+		glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(0.2f, 0.3f, 0.3f, 0.1f);
 
 		//Enable stencil test
 		if(isStencilTestEnable)
@@ -547,7 +547,7 @@ int main()
 		skyboxShader.SetMat4f("viewMat", glm::value_ptr(skyboxView));
 		skyboxShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
 		glBindVertexArray(skyboxVAO);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTexture);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glDepthMask(GL_TRUE);
 		//Update cull mode
