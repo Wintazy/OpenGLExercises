@@ -15,6 +15,7 @@ const GLchar* TRANSFORM_2D_3D_VERTEX_SHADER_PATH = "../Data/Shaders/2dTo3d.vs";
 const GLchar* GLYPH_VERTEX_SHADER_PATH = "../Data/Shaders/Glyph.vs";
 const GLchar* SCREEN_VERTEX_SHADER_PATH = "../Data/Shaders/TextureBuffer.vs";
 const GLchar* SKYBOX_VERTEX_SHADER_PATH = "../Data/Shaders/Skybox.vs";
+const GLchar* REFLECT_VERTEX_SHADER_PATH = "../Data/Shaders/Reflect.vs";
 //Fragment shaders
 const GLchar* FADED_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
 const GLchar* TEXTURE_FRAGMENT_SHADER_PATH = "../Data/Shaders/ApplyTexture.fs";
@@ -27,6 +28,8 @@ const GLchar* SINGLE_COLOR_SHADER_PATH = "../Data/Shaders/SingleColor.fs";
 const GLchar* SCREEN_FRAG_SHADER_PATH = "../Data/Shaders/ScreenBuffer.fs";
 const GLchar* EDGE_DETECT_SHADER_PATH = "../Data/Shaders/EdgeDetect.fs";
 const GLchar* SKYBOX_FRAG_SHADER_PATH = "../Data/Shaders/Skybox.fs";
+const GLchar* REFLECT_FRAG_SHADER_PATH = "../Data/Shaders/Reflect.fs";
+const GLchar* REFRACT_FRAG_SHADER_PATH = "../Data/Shaders/Refract.fs";
 //Textures
 const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/2DTextures/container.jpg";
 const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/2DTextures/awesomeface.png";
@@ -41,8 +44,8 @@ const char* NANO_SUIT_PATH = "../Data/Models/nanosuit/nanosuit.obj";
 const char* AERITH_MODEL_PATH = "../Data/Models/crisis_core/Aerith.DAE";
 //Fonts
 const char* FONT_PATH = "../Data/Fonts/arial.ttf";
-//Cubemap
-const std::vector<std::string> CUBE_FACES_PATH
+//Skybox cubemap
+const std::vector<std::string> SKYBOX_CUBE_FACES_PATH
 {
 	"../Data/Textures/CubeTextures/mp_downunder/down-under_ft.tga",
 	"../Data/Textures/CubeTextures/mp_downunder/down-under_bk.tga",
@@ -122,8 +125,8 @@ int main()
 	//Register callback function handle window's buffer size changes
 	glfwSetFramebufferSizeCallback(window, onFrameBufferSizeChanged);
 
-	ShadersLoader shadersLoader = ShadersLoader();
-	shadersLoader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, TEXTURE_FRAGMENT_SHADER_PATH);
+	ShadersLoader normalTextureShader = ShadersLoader();
+	normalTextureShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, TEXTURE_FRAGMENT_SHADER_PATH);
 
 	ShadersLoader depthVisualShader = ShadersLoader();
 	depthVisualShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, DEPTH_VISUAL_SHADER_PATH);
@@ -131,59 +134,65 @@ int main()
 	ShadersLoader singleColorShader = ShadersLoader();
 	singleColorShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, SINGLE_COLOR_SHADER_PATH);
 
+	ShadersLoader reflectShader = ShadersLoader();
+	reflectShader.LoadShaders(REFLECT_VERTEX_SHADER_PATH, REFLECT_FRAG_SHADER_PATH);
+
+	ShadersLoader refractShader = ShadersLoader();
+	refractShader.LoadShaders(REFLECT_VERTEX_SHADER_PATH, REFRACT_FRAG_SHADER_PATH);
+
 	/*----Load models data----*/
 	//Model customModel = Model(AERITH_MODEL_PATH);
 	/*-----------------*/
 	/*Prepare vertex data to render*/
 	float cubeVertices[] = {
-		//Positions			//Tex coords
-		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, //1
-		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
-		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
+		//Positions			//Norm vec
+		0.5f, -0.5f, 0.0f,	0.0f, 0.0f, -1.0f, //1
+		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, -1.0f, //0
+		0.5f, 0.5f, 0.0f,	0.0f, 0.0f, -1.0f, //2
 
-		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
-		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
-		-0.5f, 0.5f, 0.0f,	0.0f, 1.0f, //3
+		0.5f, 0.5f, 0.0f,	0.0f, 0.0f, -1.0f, //2
+		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, -1.0f, //0
+		-0.5f, 0.5f, 0.0f,	0.0f, 0.0f, -1.0f, //3
 
-		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, //1			 
-		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
-		0.5f, -0.5f, 1.0f,	1.0f, 1.0f, //5
-														
-		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
-		-0.5f, -0.5f, 1.0f,	0.0f, 1.0f, //4
-		0.5f, -0.5f, 1.0f,	1.0f, 1.0f, //5
+		-0.5f, -0.5f, 0.0f,	0.0f, -1.0f, 0.0f, //0
+		0.5f, -0.5f, 0.0f,	0.0f, -1.0f, 0.0f, //1
+		0.5f, -0.5f, 1.0f,	0.0f, -1.0f, 0.0f, //5
+												
+		-0.5f, -0.5f, 1.0f,	0.0f, -1.0f, 0.0f, //4		
+		-0.5f, -0.5f, 0.0f,	0.0f, -1.0f, 0.0f, //0
+		0.5f, -0.5f, 1.0f,	0.0f, -1.0f, 0.0f, //5
 														 
-		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
-		-0.5f, 0.5f, 0.0f,	0.0f, 1.0f, //3
-		-0.5f, 0.5f, 1.0f,	0.0f, 0.0f, //7
+		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 0.0f, //2
+		-0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 0.0f, //3
+		-0.5f, 0.5f, 1.0f,	0.0f, 1.0f, 0.0f, //7
 													
-		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
-		-0.5f, 0.5f, 1.0f,	0.0f, 0.0f, //7
-		0.5f, 0.5f, 1.0f,	1.0f, 0.0f, //6
+		0.5f, 0.5f, 0.0f,	0.0f, 1.0f, 0.0f, //2
+		-0.5f, 0.5f, 1.0f,	0.0f, 1.0f, 0.0f, //7
+		0.5f, 0.5f, 1.0f,	0.0f, 1.0f, 0.0f, //6
 														
-		-0.5f, -0.5f, 1.0f,	0.0f, 1.0f, //4
-		0.5f, -0.5f, 1.0f,	1.0f, 1.0f, //5
-		-0.5f, 0.5f, 1.0f,	0.0f, 0.0f, //7
+		-0.5f, -0.5f, 1.0f,	0.0f, 0.0f, 1.0f, //4
+		0.5f, -0.5f, 1.0f,	0.0f, 0.0f, 1.0f, //5
+		-0.5f, 0.5f, 1.0f,	0.0f, 0.0f, 1.0f, //7
 														
-		0.5f, -0.5f, 1.0f,	1.0f, 1.0f, //5
-		0.5f, 0.5f, 1.0f,	1.0f, 0.0f, //6
-		-0.5f, 0.5f, 1.0f,	0.0f, 0.0f, //7
+		0.5f, -0.5f, 1.0f,	0.0f, 0.0f, 1.0f, //5
+		0.5f, 0.5f, 1.0f,	0.0f, 0.0f, 1.0f, //6
+		-0.5f, 0.5f, 1.0f,	0.0f, 0.0f, 1.0f, //7
 													
-		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
-		-0.5f, 0.5f, 1.0f,	1.0f, 1.0f, //11
-		-0.5f, 0.5f, 0.0f,	0.0f, 1.0f, //3
+		-0.5f, -0.5f, 0.0f,	-1.0f, 0.0f, 0.0f, //0
+		-0.5f, 0.5f, 1.0f,	-1.0f, 0.0f, 0.0f, //11
+		-0.5f, 0.5f, 0.0f,	-1.0f, 0.0f, 0.0f, //3
 														
-		-0.5f, -0.5f, 0.0f,	0.0f, 0.0f, //0
-		-0.5f, -0.5f, 1.0f,	1.0f, 0.0f, //8
-		-0.5f, 0.5f, 1.0f,	1.0f, 1.0f, //11
+		-0.5f, -0.5f, 0.0f,	-1.0f, 0.0f, 0.0f, //0
+		-0.5f, -0.5f, 1.0f,	-1.0f, 0.0f, 0.0f, //8
+		-0.5f, 0.5f, 1.0f,	-1.0f, 0.0f, 0.0f, //11
 		
-		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, //1
-		0.5f, 0.5f, 0.0f,	1.0f, 1.0f, //2
-		0.5f, 0.5f, 1.0f,	0.0f, 1.0f, //10
+		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, 0.0f, //1
+		0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f, //2
+		0.5f, 0.5f, 1.0f,	1.0f, 0.0f, 0.0f, //10
 
-		0.5f, -0.5f, 1.0f,	0.0f, 0.0f, //9
-		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, //1
-		0.5f, 0.5f, 1.0f,	0.0f, 1.0f //10
+		0.5f, -0.5f, 1.0f,	1.0f, 0.0f, 0.0f, //9
+		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, 0.0f, //1
+		0.5f, 0.5f, 1.0f,	1.0f, 0.0f, 0.0f //10
 	};
 
 	float planeVertices[] = {
@@ -280,9 +289,9 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glBindVertexArray(0);
 	std::cout << "Init cubes VAO. glGetError: " << glGetError() << std::endl;
 	// plane VAO
@@ -494,7 +503,7 @@ int main()
 	ShadersLoader skyboxShader;
 	skyboxShader.LoadShaders(SKYBOX_VERTEX_SHADER_PATH, SKYBOX_FRAG_SHADER_PATH);
 
-	unsigned int cubemapTexture = LoadCubeTexture(CUBE_FACES_PATH);
+	unsigned int skyboxTexture = LoadCubeTexture(SKYBOX_CUBE_FACES_PATH);
 	/*--Skybox setup END--*/
 	
 	//Render loop - keep running till window should stop
@@ -540,18 +549,6 @@ int main()
 		{
 			++frameCount;
 		}
-		//Skybox
-		glDepthMask(GL_FALSE);
-		glDisable(GL_CULL_FACE);
-		skyboxShader.EnableShaderProgram();
-		glm::mat4 skyboxView = glm::mat4(glm::mat3(camera->GetViewMat()));
-		skyboxShader.SetMat4f("viewMat", glm::value_ptr(skyboxView));
-		skyboxShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
-		glBindVertexArray(skyboxVAO);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glDepthMask(GL_TRUE);
-		glEnable(GL_CULL_FACE);
 		//Update cull mode
 		if (isCullFrontFace)
 		{
@@ -566,12 +563,12 @@ int main()
 		if (isAlwaysPassDepthTest)
 			glDepthFunc(GL_ALWAYS);
 		else
-			glDepthFunc(GL_LESS);
+			glDepthFunc(GL_LEQUAL);
 
 		if(isDepthVisualizedEnable)
 			currentShader = depthVisualShader;
 		else
-			currentShader = shadersLoader;
+			currentShader = normalTextureShader;
 
 		currentShader.EnableShaderProgram();
 		currentShader.SetInt("customTexture1", 0);
@@ -581,20 +578,21 @@ int main()
 		if(isStencilTestEnable)
 			glStencilMask(0x00);
 		//Axes
+		glm::mat4 model;
 		glBindVertexArray(axesVAO);
 		glBindTexture(GL_TEXTURE_2D, floorTexture);
 		currentShader.SetMat4f("modelMat", glm::value_ptr(glm::mat4()));
 		glDrawArrays(GL_LINES, 0, 6);
 		glBindVertexArray(0);
 		//floor
+		/*
 		glDisable(GL_CULL_FACE);
-		glm::mat4 model;
 		glBindVertexArray(planeVAO);
 		glBindTexture(GL_TEXTURE_2D, floorTexture);
 		currentShader.SetMat4f("modelMat", glm::value_ptr(glm::mat4()));
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
-		glEnable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);*/
 		//Cubes
 		if (isStencilTestEnable)
 		{
@@ -602,9 +600,14 @@ int main()
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			glStencilMask(0xFF);
 		}
+		reflectShader.EnableShaderProgram();
+		reflectShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
+		reflectShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+		reflectShader.SetVec3f("cameraPos", camera->GetViewPos());
 		glBindVertexArray(cubeVAO);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, cubeTexture);
+		//glBindTexture(GL_TEXTURE_2D, cubeTexture);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
 		model = glm::mat4();
 		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
 		currentShader.SetMat4f("modelMat", glm::value_ptr(model));
@@ -612,7 +615,11 @@ int main()
 		//2nd cube
 		model = glm::mat4();
 		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-		currentShader.SetMat4f("modelMat", glm::value_ptr(model));
+		refractShader.EnableShaderProgram();
+		refractShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
+		refractShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+		refractShader.SetVec3f("cameraPos", camera->GetViewPos());
+		refractShader.SetMat4f("modelMat", glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 		//
@@ -645,6 +652,17 @@ int main()
 			glStencilMask(0xFF);
 			glEnable(GL_DEPTH_TEST);
 		}
+		//Skybox
+		glDisable(GL_CULL_FACE);
+		skyboxShader.EnableShaderProgram();
+		glm::mat4 skyboxView = glm::mat4(glm::mat3(camera->GetViewMat()));
+		skyboxShader.SetMat4f("viewMat", glm::value_ptr(skyboxView));
+		skyboxShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+		glBindVertexArray(skyboxVAO);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glEnable(GL_CULL_FACE);
+		glBindVertexArray(0);
 
 		//Grasses
 		glDisable(GL_CULL_FACE);
@@ -666,10 +684,10 @@ int main()
 		}
 		glEnable(GL_CULL_FACE);
 		glBindVertexArray(0);
-
 		//Pass default framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		if (isEdgeDetectEnable)
@@ -687,6 +705,7 @@ int main()
 		RenderText(glyphShader, insText, 5.0f, TEXT_TOP_SCREEN_OFFSET, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
 
 		RenderText(glyphShader, "FPS: " + std::to_string(FPS), 5.0f, 5.0f + TEXT_PADDING, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
+		glEnable(GL_CULL_FACE);
 		//
 		/*---Rendering end---*/
 		

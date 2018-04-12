@@ -145,6 +145,15 @@
     <None Include="..\Data\Shaders\Skybox.fs">
       <Filter>Data\Shaders</Filter>
     </None>
+    <None Include="..\Data\Shaders\Reflect.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\Reflect.vs">
+      <Filter>Data\Shaders</Filter>
+    </None>
+    <None Include="..\Data\Shaders\Refract.fs">
+      <Filter>Data\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Data\Textures\awesomeface.png">

@@ -156,6 +156,9 @@
     <None Include="..\Data\Shaders\Normal.vs" />
     <None Include="..\Data\Shaders\ApplyTexture.fs" />
     <None Include="..\Data\Shaders\NormalModel.fs" />
+    <None Include="..\Data\Shaders\Reflect.fs" />
+    <None Include="..\Data\Shaders\Reflect.vs" />
+    <None Include="..\Data\Shaders\Refract.fs" />
     <None Include="..\Data\Shaders\ScreenBuffer.fs" />
     <None Include="..\Data\Shaders\SingleColor.fs" />
     <None Include="..\Data\Shaders\Skybox.fs" />
