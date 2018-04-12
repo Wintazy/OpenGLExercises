@@ -44,12 +44,12 @@ const char* FONT_PATH = "../Data/Fonts/arial.ttf";
 //Cubemap
 const std::vector<std::string> CUBE_FACES_PATH
 {
-	"../Data/Textures/CubeTextures/interstellar/interstellar_lf.tga",
-	"../Data/Textures/CubeTextures/interstellar/interstellar_rt.tga",
-	"../Data/Textures/CubeTextures/interstellar/interstellar_up.tga",
-	"../Data/Textures/CubeTextures/interstellar/interstellar_dn.tga",
-	"../Data/Textures/CubeTextures/interstellar/interstellar_ft.tga",
-	"../Data/Textures/CubeTextures/interstellar/interstellar_bk.tga"
+	"../Data/Textures/CubeTextures/mp_downunder/down-under_ft.tga",
+	"../Data/Textures/CubeTextures/mp_downunder/down-under_bk.tga",
+	"../Data/Textures/CubeTextures/mp_downunder/down-under_up.tga",
+	"../Data/Textures/CubeTextures/mp_downunder/down-under_dn.tga",
+	"../Data/Textures/CubeTextures/mp_downunder/down-under_rt.tga",
+	"../Data/Textures/CubeTextures/mp_downunder/down-under_lf.tga"
 };
 
 struct Character {
@@ -258,12 +258,12 @@ int main()
 		1.0f, -1.0f,  1.0f,
 		-1.0f, -1.0f,  1.0f,
 
-		-1.0f,  1.0f, -1.0f,
+		1.0f,  1.0f,  1.0f,
 		1.0f,  1.0f, -1.0f,
-		1.0f,  1.0f,  1.0f,
-		1.0f,  1.0f,  1.0f,
-		-1.0f,  1.0f,  1.0f,
 		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
 
 		-1.0f, -1.0f, -1.0f,
 		-1.0f, -1.0f,  1.0f,
@@ -542,6 +542,7 @@ int main()
 		}
 		//Skybox
 		glDepthMask(GL_FALSE);
+		glDisable(GL_CULL_FACE);
 		skyboxShader.EnableShaderProgram();
 		glm::mat4 skyboxView = glm::mat4(glm::mat3(camera->GetViewMat()));
 		skyboxShader.SetMat4f("viewMat", glm::value_ptr(skyboxView));
@@ -550,6 +551,7 @@ int main()
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glDepthMask(GL_TRUE);
+		glEnable(GL_CULL_FACE);
 		//Update cull mode
 		if (isCullFrontFace)
 		{
