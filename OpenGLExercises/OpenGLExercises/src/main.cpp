@@ -610,7 +610,7 @@ int main()
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
 		model = glm::mat4();
 		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-		currentShader.SetMat4f("modelMat", glm::value_ptr(model));
+		reflectShader.SetMat4f("modelMat", glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		//2nd cube
 		model = glm::mat4();
