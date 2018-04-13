@@ -126,19 +126,24 @@ int main()
 	glfwSetFramebufferSizeCallback(window, onFrameBufferSizeChanged);
 
 	ShadersLoader normalTextureShader = ShadersLoader();
-	normalTextureShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, TEXTURE_FRAGMENT_SHADER_PATH);
+	normalTextureShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	normalTextureShader.LoadShaders(TEXTURE_FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER);
 
 	ShadersLoader depthVisualShader = ShadersLoader();
-	depthVisualShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, DEPTH_VISUAL_SHADER_PATH);
+	depthVisualShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	depthVisualShader.LoadShaders(DEPTH_VISUAL_SHADER_PATH, GL_FRAGMENT_SHADER);
 
 	ShadersLoader singleColorShader = ShadersLoader();
-	singleColorShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, SINGLE_COLOR_SHADER_PATH);
+	singleColorShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	singleColorShader.LoadShaders(SINGLE_COLOR_SHADER_PATH, GL_FRAGMENT_SHADER);
 
 	ShadersLoader reflectShader = ShadersLoader();
-	reflectShader.LoadShaders(REFLECT_VERTEX_SHADER_PATH, REFLECT_FRAG_SHADER_PATH);
+	reflectShader.LoadShaders(REFLECT_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	reflectShader.LoadShaders(REFLECT_FRAG_SHADER_PATH, GL_FRAGMENT_SHADER);
 
 	ShadersLoader refractShader = ShadersLoader();
-	refractShader.LoadShaders(REFLECT_VERTEX_SHADER_PATH, REFRACT_FRAG_SHADER_PATH);
+	refractShader.LoadShaders(REFLECT_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	refractShader.LoadShaders(REFRACT_FRAG_SHADER_PATH, GL_FRAGMENT_SHADER);
 
 	/*----Load models data----*/
 	//Model customModel = Model(AERITH_MODEL_PATH);
@@ -431,7 +436,8 @@ int main()
 	glBindVertexArray(0);
 
 	ShadersLoader glyphShader;
-	glyphShader.LoadShaders(GLYPH_VERTEX_SHADER_PATH, GLYPH_FRAG_SHADER_PATH);
+	glyphShader.LoadShaders(GLYPH_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	glyphShader.LoadShaders(GLYPH_FRAG_SHADER_PATH, GL_FRAGMENT_SHADER);
 	glm::mat4 textProjectionMat = glm::ortho(0.0f, static_cast<GLfloat>(SCREEN_WIDTH), 0.0f, static_cast<GLfloat>(SCREEN_HEIGHT));
 	glyphShader.EnableShaderProgram();
 	glyphShader.SetMat4f("projectionMat", glm::value_ptr(textProjectionMat));
@@ -480,11 +486,13 @@ int main()
 	glBindVertexArray(0);
 
 	ShadersLoader screenShader = ShadersLoader();
-	screenShader.LoadShaders(SCREEN_VERTEX_SHADER_PATH, SCREEN_FRAG_SHADER_PATH);
+	screenShader.LoadShaders(SCREEN_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	screenShader.LoadShaders(SCREEN_FRAG_SHADER_PATH, GL_FRAGMENT_SHADER);
 	screenShader.EnableShaderProgram();
 	screenShader.SetInt("screenTexture", 0);
 	ShadersLoader edgeDetectShader = ShadersLoader();
-	edgeDetectShader.LoadShaders(SCREEN_VERTEX_SHADER_PATH, EDGE_DETECT_SHADER_PATH);
+	edgeDetectShader.LoadShaders(SCREEN_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	edgeDetectShader.LoadShaders(EDGE_DETECT_SHADER_PATH, GL_FRAGMENT_SHADER);
 	edgeDetectShader.EnableShaderProgram();
 	edgeDetectShader.SetInt("screenTexture", 0);
 	/*--Texture buffer setup END--*/
@@ -501,7 +509,8 @@ int main()
 	glBindVertexArray(0);
 
 	ShadersLoader skyboxShader;
-	skyboxShader.LoadShaders(SKYBOX_VERTEX_SHADER_PATH, SKYBOX_FRAG_SHADER_PATH);
+	skyboxShader.LoadShaders(SKYBOX_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	skyboxShader.LoadShaders(SKYBOX_FRAG_SHADER_PATH, GL_FRAGMENT_SHADER);
 
 	unsigned int skyboxTexture = LoadCubeTexture(SKYBOX_CUBE_FACES_PATH);
 	/*--Skybox setup END--*/

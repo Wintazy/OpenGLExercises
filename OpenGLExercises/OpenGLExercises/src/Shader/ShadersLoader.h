@@ -11,7 +11,7 @@ class ShadersLoader
 public:
 	unsigned int m_shaderProgramId;
 	ShadersLoader();
-	void LoadShaders(const GLchar* vertexShaderPath, const GLchar* fragmentShaderpath);
+	void LoadShaders(const GLchar* shaderPath, GLuint type);
 
 	void EnableShaderProgram();
 
@@ -24,5 +24,5 @@ public:
 	void SetVec3f(const std::string &name, glm::vec3 i_vec3f) const;
 private:
 	int CompileShader(const char* shaderSource, GLuint type);
-	int LinkShaders(int vertexShaderId, int fragmentShaderId);
+	void LinkShaders(int shaderId);
 };

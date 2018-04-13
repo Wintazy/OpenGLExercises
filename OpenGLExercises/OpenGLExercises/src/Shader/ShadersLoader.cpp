@@ -2,44 +2,7 @@
 
 ShadersLoader::ShadersLoader()
 {
-
-}
-
-void ShadersLoader::LoadShaders(const GLchar* vetexShaderPath, const GLchar* fragmentShaderPath)
-{
-	std::string vertexShaderCode;
-	std::string fragmentShaderCode;
-	std::ifstream vetexShaderFile;
-	std::ifstream fragmentShaderFile;
-
-	vetexShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-	fragmentShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-	try
-	{
-		vetexShaderFile.open(vetexShaderPath);
-		fragmentShaderFile.open(fragmentShaderPath);
-		std::stringstream vetexShaderStream, fragmentShaderStream;
-
-		vetexShaderStream << vetexShaderFile.rdbuf();
-		fragmentShaderStream << fragmentShaderFile.rdbuf();
-
-		vetexShaderFile.close();
-		fragmentShaderFile.close();
-
-		vertexShaderCode = vetexShaderStream.str();
-		fragmentShaderCode = fragmentShaderStream.str();
-	}
-	catch (const std::exception&)
-	{
-		std::cout << "Failed to read shader files " << vetexShaderPath << " " << fragmentShaderPath << std::endl;
-	}
-
-	int vertexShaderId = CompileShader(vertexShaderCode.c_str(), GL_VERTEX_SHADER);
-	int fragmentShaderId = CompileShader(fragmentShaderCode.c_str(), GL_FRAGMENT_SHADER);
-	m_shaderProgramId = LinkShaders(vertexShaderId, fragmentShaderId);
-	glDeleteShader(vertexShaderId);
-	glDeleteShader(fragmentShaderId);
+	m_shaderProgramId = glCreateProgram();
 }
 
 int ShadersLoader::CompileShader(const char* shaderSource, GLuint type)
@@ -60,26 +23,6 @@ int ShadersLoader::CompileShader(const char* shaderSource, GLuint type)
 	}
 
 	return shaderIdResult;
-}
-
-int ShadersLoader::LinkShaders(int vertexShaderId, int fragmentShaderId)
-{
-	m_shaderProgramId = glCreateProgram();
-	glAttachShader(m_shaderProgramId, vertexShaderId);
-	glAttachShader(m_shaderProgramId, fragmentShaderId);
-	glLinkProgram(m_shaderProgramId);
-
-	int success;
-	char infoLog[512];
-	glGetProgramiv(m_shaderProgramId, GL_LINK_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(m_shaderProgramId, 512, NULL, infoLog);
-		std::cout << "Failed to link shader program!\n" << infoLog << std::endl;
-		return -1;
-	}
-
-	return m_shaderProgramId;
 }
 
 void ShadersLoader::EnableShaderProgram()
@@ -120,4 +63,48 @@ void ShadersLoader::SetVec3f(const std::string &name, float x, float y, float z)
 void ShadersLoader::SetVec3f(const std::string &name, glm::vec3 i_vec3f) const
 {
 	glUniform3f(glGetUniformLocation(m_shaderProgramId, name.c_str()), i_vec3f.x, i_vec3f.y, i_vec3f.z);
+}
+
+void ShadersLoader::LoadShaders(const GLchar* shaderPath, GLuint type)
+{
+	std::string shaderCode;
+	std::ifstream shaderFile;
+
+	shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+	try
+	{
+		shaderFile.open(shaderPath);
+		std::stringstream shaderStream, fragmentShaderStream;
+
+		shaderStream << shaderFile.rdbuf();
+
+		shaderFile.close();
+
+		shaderCode = shaderStream.str();
+	}
+	catch (const std::exception&)
+	{
+		std::cout << "Failed to read shader files " << shaderPath << std::endl;
+	}
+
+	int shaderId = CompileShader(shaderCode.c_str(), type);
+	LinkShaders(shaderId);
+	glDeleteShader(shaderId);
+}
+
+void ShadersLoader::LinkShaders(int shaderId)
+{
+	EnableShaderProgram();
+	glAttachShader(m_shaderProgramId, shaderId);
+	glLinkProgram(m_shaderProgramId);
+
+	int success;
+	char infoLog[512];
+	glGetProgramiv(m_shaderProgramId, GL_LINK_STATUS, &success);
+	if (!success)
+	{
+		glGetProgramInfoLog(m_shaderProgramId, 512, NULL, infoLog);
+		std::cout << "Failed to link shader program!\n" << infoLog << std::endl;
+	}
 }
