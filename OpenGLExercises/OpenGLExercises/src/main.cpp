@@ -16,6 +16,11 @@ const GLchar* GLYPH_VERTEX_SHADER_PATH = "../Data/Shaders/Glyph.vs";
 const GLchar* SCREEN_VERTEX_SHADER_PATH = "../Data/Shaders/TextureBuffer.vs";
 const GLchar* SKYBOX_VERTEX_SHADER_PATH = "../Data/Shaders/Skybox.vs";
 const GLchar* REFLECT_VERTEX_SHADER_PATH = "../Data/Shaders/Reflect.vs";
+const GLchar* MODEL_VERTEX_SHADER_PATH = "../Data/Shaders/Model.vs";
+const GLchar* NV_VISUALIZE_VERTEX_SHADER_PATH = "../Data/Shaders/NormVecVisualize.vs";
+//Geometry shader
+const GLchar* EXPLODE_GEO_SHADER_PATH = "../Data/Shaders/Explode.gs";
+const GLchar* NV_VISUALIZE_GEO_SHADER_PATH = "../Data/Shaders/NormVecVisualize.gs";
 //Fragment shaders
 const GLchar* FADED_SHADER_PATH = "../Data/Shaders/SlowlyFaded.fs";
 const GLchar* TEXTURE_FRAGMENT_SHADER_PATH = "../Data/Shaders/ApplyTexture.fs";
@@ -30,6 +35,7 @@ const GLchar* EDGE_DETECT_SHADER_PATH = "../Data/Shaders/EdgeDetect.fs";
 const GLchar* SKYBOX_FRAG_SHADER_PATH = "../Data/Shaders/Skybox.fs";
 const GLchar* REFLECT_FRAG_SHADER_PATH = "../Data/Shaders/Reflect.fs";
 const GLchar* REFRACT_FRAG_SHADER_PATH = "../Data/Shaders/Refract.fs";
+const GLchar* NV_VISUALIZE_FRAG_SHADER_PATH = "../Data/Shaders/NormVecVisualize.fs";
 //Textures
 const GLchar* CONTAINER_TEXTURE_PATH = "../Data/Textures/2DTextures/container.jpg";
 const GLchar* FACE_TEXTURE_PATH = "../Data/Textures/2DTextures/awesomeface.png";
@@ -64,10 +70,11 @@ struct Character {
 std::map<GLchar, Character> Characters;
 
 bool isAlwaysPassDepthTest = false;
-bool isDepthVisualizedEnable = false;
-bool isStencilTestEnable = false;
+bool isDepthVisualizedEnabled = false;
+bool isStencilTestEnabled = false;
 bool isCullFrontFace = false;
-bool isEdgeDetectEnable = false;
+bool isEdgeDetectEnabled = false;
+bool isNormVecVisualizeEnabled = false;
 std::map<int, int> KeyState;
 
 float lastFrameTime = 0.0f;
@@ -145,8 +152,26 @@ int main()
 	refractShader.LoadShaders(REFLECT_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
 	refractShader.LoadShaders(REFRACT_FRAG_SHADER_PATH, GL_FRAGMENT_SHADER);
 
+	ShadersLoader modelShader = ShadersLoader();
+	modelShader.LoadShaders(MODEL_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	modelShader.LoadShaders(EXPLODE_GEO_SHADER_PATH, GL_GEOMETRY_SHADER);
+	modelShader.LoadShaders(NORMAL_MODEL_SHADER_PATH, GL_FRAGMENT_SHADER);
+
+	ShadersLoader normVecVisualizeShader = ShadersLoader();
+	normVecVisualizeShader.LoadShaders(NV_VISUALIZE_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	normVecVisualizeShader.LoadShaders(NV_VISUALIZE_GEO_SHADER_PATH, GL_GEOMETRY_SHADER);
+	normVecVisualizeShader.LoadShaders(NV_VISUALIZE_FRAG_SHADER_PATH, GL_FRAGMENT_SHADER);
+
 	/*----Load models data----*/
-	//Model customModel = Model(AERITH_MODEL_PATH);
+	Model customModel = Model(AERITH_MODEL_PATH);
+	modelShader.EnableShaderProgram();
+	modelShader.SetVec3f("light.position", 1.0f, 1.0f, 1.0f);
+	modelShader.SetVec3f("light.ambient", 0.5f, 0.5f, 0.5f);
+	modelShader.SetVec3f("light.diffuse", 0.8f, 0.8f, 0.8f);
+	modelShader.SetVec3f("light.specular", 1.0f, 1.0f, 1.0f);
+	modelShader.SetFloat("light.constant", 1.0f);
+	modelShader.SetFloat("light.linear", 0.09);
+	modelShader.SetFloat("light.quadratic", 0.002);
 	/*-----------------*/
 	/*Prepare vertex data to render*/
 	float cubeVertices[] = {
@@ -447,11 +472,13 @@ int main()
 	camera->SetPosition(glm::vec3(-3.0f, 3.0f, 5.0f));
 	camera->UpdateAngles(40.0f, -30.0f);
 	std::string insText = "Hot key. M: depth test mode, V: visualize, T: stencil test, C: cull_face mode, E: Edge detecting mode";
+	std::string insText_2 = "N: Norm vec visualize";
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_M, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_V, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_T, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_C, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_E, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_N, GLFW_RELEASE));
 	/*--Custom setup END--*/
 
 	/*--Texture buffer setup--*/
@@ -531,7 +558,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//Enable stencil test
-		if(isStencilTestEnable)
+		if(isStencilTestEnabled)
 		{
 			glEnable(GL_STENCIL_TEST);
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -574,7 +601,7 @@ int main()
 		else
 			glDepthFunc(GL_LEQUAL);
 
-		if(isDepthVisualizedEnable)
+		if(isDepthVisualizedEnabled)
 			currentShader = depthVisualShader;
 		else
 			currentShader = normalTextureShader;
@@ -584,7 +611,7 @@ int main()
 		currentShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
 		currentShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
 		//
-		if(isStencilTestEnable)
+		if(isStencilTestEnabled)
 			glStencilMask(0x00);
 		//Axes
 		glm::mat4 model;
@@ -602,8 +629,21 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 		glEnable(GL_CULL_FACE);*/
+
+		//Model
+		modelShader.EnableShaderProgram();
+		modelShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
+		modelShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+		modelShader.SetVec3f("viewPos", glm::value_ptr(camera->GetViewPos()));
+		modelShader.SetFloat("time", currentFrameTime);
+		glm::mat4 customModelTransMat;
+		customModelTransMat = glm::translate(customModelTransMat, glm::vec3(0.0f, 0.0f, -1.0f));
+		customModelTransMat = glm::scale(customModelTransMat, glm::vec3(0.2f, 0.2f, 0.2f));
+		modelShader.SetMat4f("modelMat", glm::value_ptr(customModelTransMat));
+
+		customModel.Render(modelShader);
 		//Cubes
-		if (isStencilTestEnable)
+		if (isStencilTestEnabled)
 		{
 			//Enable stencil mask updating
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -630,9 +670,24 @@ int main()
 		refractShader.SetVec3f("cameraPos", camera->GetViewPos());
 		refractShader.SetMat4f("modelMat", glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//Normal vector visualize
+		if(isNormVecVisualizeEnabled)
+		{
+			normVecVisualizeShader.EnableShaderProgram();
+			normVecVisualizeShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
+			normVecVisualizeShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+			normVecVisualizeShader.SetMat4f("modelMat", glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+			normVecVisualizeShader.SetMat4f("modelMat", glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 		glBindVertexArray(0);
 		//
-		if (isStencilTestEnable)
+		if (isStencilTestEnabled)
 		{
 			//Disable stencil mask updating
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -699,7 +754,7 @@ int main()
 		glDisable(GL_CULL_FACE);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		if (isEdgeDetectEnable)
+		if (isEdgeDetectEnabled)
 			edgeDetectShader.EnableShaderProgram();
 		else
 			screenShader.EnableShaderProgram();
@@ -712,6 +767,7 @@ int main()
 		RenderText(glyphShader, cameraPos, 5.0f, 5.0f, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
 
 		RenderText(glyphShader, insText, 5.0f, TEXT_TOP_SCREEN_OFFSET, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
+		RenderText(glyphShader, insText_2, 5.0f, TEXT_TOP_SCREEN_OFFSET - TEXT_PADDING, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
 
 		RenderText(glyphShader, "FPS: " + std::to_string(FPS), 5.0f, 5.0f + TEXT_PADDING, TEXT_DEFAULT_SIZE, glm::vec3(0.5, 0.8f, 0.2f));
 		glEnable(GL_CULL_FACE);
@@ -782,13 +838,13 @@ void processInput(GLFWwindow *window)
 	{
 		KeyState[GLFW_KEY_V] = glfwGetKey(window, GLFW_KEY_V);
 		if (KeyState[GLFW_KEY_V] == GLFW_RELEASE)
-			isDepthVisualizedEnable = !isDepthVisualizedEnable;
+			isDepthVisualizedEnabled = !isDepthVisualizedEnabled;
 	}
 	if (KeyState[GLFW_KEY_T] != glfwGetKey(window, GLFW_KEY_T))
 	{
 		KeyState[GLFW_KEY_T] = glfwGetKey(window, GLFW_KEY_T);
 		if (KeyState[GLFW_KEY_T] == GLFW_RELEASE)
-			isStencilTestEnable = !isStencilTestEnable;
+			isStencilTestEnabled = !isStencilTestEnabled;
 	}
 	if (KeyState[GLFW_KEY_C] != glfwGetKey(window, GLFW_KEY_C))
 	{
@@ -800,7 +856,13 @@ void processInput(GLFWwindow *window)
 	{
 		KeyState[GLFW_KEY_E] = glfwGetKey(window, GLFW_KEY_E);
 		if (KeyState[GLFW_KEY_E] == GLFW_RELEASE)
-			isEdgeDetectEnable = !isEdgeDetectEnable;
+			isEdgeDetectEnabled = !isEdgeDetectEnabled;
+	}
+	if (KeyState[GLFW_KEY_N] != glfwGetKey(window, GLFW_KEY_N))
+	{
+		KeyState[GLFW_KEY_N] = glfwGetKey(window, GLFW_KEY_N);
+		if (KeyState[GLFW_KEY_N] == GLFW_RELEASE)
+			isNormVecVisualizeEnabled = !isNormVecVisualizeEnabled;
 	}
 }
 
