@@ -18,6 +18,7 @@ const GLchar* SKYBOX_VERTEX_SHADER_PATH = "../Data/Shaders/Skybox.vs";
 const GLchar* REFLECT_VERTEX_SHADER_PATH = "../Data/Shaders/Reflect.vs";
 const GLchar* MODEL_VERTEX_SHADER_PATH = "../Data/Shaders/Model.vs";
 const GLchar* NV_VISUALIZE_VERTEX_SHADER_PATH = "../Data/Shaders/NormVecVisualize.vs";
+const GLchar* MULTI_INSTANCE_VERTEX_SHADER_PATH = "../Data/Shaders/MultiInstance.vs";
 //Geometry shader
 const GLchar* EXPLODE_GEO_SHADER_PATH = "../Data/Shaders/Explode.gs";
 const GLchar* NV_VISUALIZE_GEO_SHADER_PATH = "../Data/Shaders/NormVecVisualize.gs";
@@ -46,8 +47,9 @@ const GLchar* GLASS_WINDOW_TEXTURE_PATH = "../Data/Textures/2DTextures/blending_
 const GLchar* CRATE_DIFFUSE_PATH = "../Data/LightingMaps/diffuse_wooden_crate.png";
 const GLchar* CRATE_SPECULAR_PATH = "../Data/LightingMaps/specular_wooden_crate.png";
 //Models
-const char* NANO_SUIT_PATH = "../Data/Models/nanosuit/nanosuit.obj";
 const char* AERITH_MODEL_PATH = "../Data/Models/crisis_core/Aerith.DAE";
+const char* PLANET_MODEL_PATH = "../Data/Models/planet/planet.obj";
+const char* ROCK_MODEL_PATH = "../Data/Models/rock/rock.obj";
 //Fonts
 const char* FONT_PATH = "../Data/Fonts/arial.ttf";
 //Skybox cubemap
@@ -75,6 +77,7 @@ bool isStencilTestEnabled = false;
 bool isCullFrontFace = false;
 bool isEdgeDetectEnabled = false;
 bool isNormVecVisualizeEnabled = false;
+bool isWireframeEnabled = false;
 std::map<int, int> KeyState;
 
 float lastFrameTime = 0.0f;
@@ -127,11 +130,23 @@ int main()
 	}
 	//-------------
 
-	//Set draw style to wireframe polygons
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	/*------ Further openGL config -------*/
 	//Register callback function handle window's buffer size changes
 	glfwSetFramebufferSizeCallback(window, onFrameBufferSizeChanged);
+	//Optional: Enable blending to correct alpha
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	//Setup input mode
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPos(window, lastMousePosX, lastMousePosY);
+	//Handle mouse input
+	glfwSetCursorPosCallback(window, onMousePosChanged);
+	glfwSetScrollCallback(window, onMouseScrolled);
+	/*------ Further openGL config END-------*/
+
+	/*---Init shaders---*/
 	ShadersLoader normalTextureShader = ShadersLoader();
 	normalTextureShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
 	normalTextureShader.LoadShaders(TEXTURE_FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER);
@@ -154,13 +169,18 @@ int main()
 
 	ShadersLoader modelShader = ShadersLoader();
 	modelShader.LoadShaders(MODEL_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
-	modelShader.LoadShaders(EXPLODE_GEO_SHADER_PATH, GL_GEOMETRY_SHADER);
+	//modelShader.LoadShaders(EXPLODE_GEO_SHADER_PATH, GL_GEOMETRY_SHADER);
 	modelShader.LoadShaders(NORMAL_MODEL_SHADER_PATH, GL_FRAGMENT_SHADER);
 
 	ShadersLoader normVecVisualizeShader = ShadersLoader();
 	normVecVisualizeShader.LoadShaders(NV_VISUALIZE_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
 	normVecVisualizeShader.LoadShaders(NV_VISUALIZE_GEO_SHADER_PATH, GL_GEOMETRY_SHADER);
 	normVecVisualizeShader.LoadShaders(NV_VISUALIZE_FRAG_SHADER_PATH, GL_FRAGMENT_SHADER);
+
+	ShadersLoader multiInstanceShader = ShadersLoader();
+	multiInstanceShader.LoadShaders(MULTI_INSTANCE_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	multiInstanceShader.LoadShaders(NORMAL_MODEL_SHADER_PATH, GL_FRAGMENT_SHADER);
+	/*---Init shaders END---*/
 
 	/*----Load models data----*/
 	Model customModel = Model(AERITH_MODEL_PATH);
@@ -172,6 +192,10 @@ int main()
 	modelShader.SetFloat("light.constant", 1.0f);
 	modelShader.SetFloat("light.linear", 0.09);
 	modelShader.SetFloat("light.quadratic", 0.002);
+
+	Model planetModel = Model(PLANET_MODEL_PATH);
+
+	Model rockModel = Model(ROCK_MODEL_PATH);
 	/*-----------------*/
 	/*Prepare vertex data to render*/
 	float cubeVertices[] = {
@@ -322,8 +346,8 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glBindVertexArray(0);
 	std::cout << "Init cubes VAO. glGetError: " << glGetError() << std::endl;
+	glBindVertexArray(0);
 	// plane VAO
 	unsigned int planeVAO, planeVBO;
 	glGenVertexArrays(1, &planeVAO);
@@ -369,6 +393,77 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(lineVertices), &lineVertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	//Planet setup
+	glm::mat4 planetModelMat = glm::mat4();
+	planetModelMat = glm::translate(planetModelMat, glm::vec3(0.0f, 2.0f, -1.0f));
+	planetModelMat = glm::scale(planetModelMat, glm::vec3(0.2f, 0.2f, 0.2f));
+	//Generate rocks VAO
+	multiInstanceShader.EnableShaderProgram();
+	multiInstanceShader.SetVec3f("light.position", 1.0f, 1.0f, 1.0f);
+	multiInstanceShader.SetVec3f("light.ambient", 0.5f, 0.5f, 0.5f);
+	multiInstanceShader.SetVec3f("light.diffuse", 0.8f, 0.8f, 0.8f);
+	multiInstanceShader.SetVec3f("light.specular", 1.0f, 1.0f, 1.0f);
+	multiInstanceShader.SetFloat("light.constant", 1.0f);
+	multiInstanceShader.SetFloat("light.linear", 0.09);
+	multiInstanceShader.SetFloat("light.quadratic", 0.002);
+	//Gegnerate random position for the rocks
+	unsigned int amount = 200;
+	glm::mat4 *modelMatrices;
+	modelMatrices = new glm::mat4[amount];
+	srand(glfwGetTime()); // initialize random seed	
+	float radius = 3.0f;
+	float offset = 0.3f;
+	for (unsigned int i = 0; i < amount; i++)
+	{
+		glm::mat4 model;
+		// 1. translation: displace along circle with 'radius' in range [-offset, offset]
+		float angle = (float)i / (float)amount * 360.0f;
+		float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float x = sin(angle) * radius + displacement;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float y = displacement * 0.4f; // keep height of field smaller compared to width of x and z
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float z = cos(angle) * radius + displacement;
+		model = glm::translate(model, glm::vec3(x, y + 2, z - 1));
+
+		// 2. scale: Scale between 0.05 and 0.25f
+		float scale = (rand() % 5) / 100.0f + 0.02;
+		model = glm::scale(model, glm::vec3(scale));
+
+		// 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+		float rotAngle = (rand() % 360);
+		model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+		// 4. now add to list of matrices
+		modelMatrices[i] = model;
+	}
+	//Generate vertex Buffer Object for the rocks
+	unsigned int buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+
+	for (unsigned int i = 0; i < rockModel.GetMeshes().size(); i++)
+	{
+		unsigned int VAO = rockModel.GetMeshes()[i].GetVAO();
+		glBindVertexArray(VAO);
+		// vertex Attributes
+		GLsizei vec4Size = sizeof(glm::vec4);
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(vec4Size));
+		glEnableVertexAttribArray(5);
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * vec4Size));
+		glEnableVertexAttribArray(6);
+		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * vec4Size));
+		glVertexAttribDivisor(3, 1);
+		glVertexAttribDivisor(4, 1);
+		glVertexAttribDivisor(5, 1);
+		glVertexAttribDivisor(6, 1);
+		std::cout << "Init rock VAO: " + std::to_string(i) + " glGetError: " << glGetError() << std::endl;
+		glBindVertexArray(0);
+	}
 	/*Prepare vertex data to render END*/
 
 	/*---Load texture---*/
@@ -382,19 +477,6 @@ int main()
 
 	/*--Bind texture to shader--*/
 	/*--Bind texture to shader END--*/
-
-	/*------ Further openGL config -------*/
-	//Optional: Enable blending to correct alpha
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	//Setup input mode
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glfwSetCursorPos(window, lastMousePosX, lastMousePosY);
-	//Handle mouse input
-	glfwSetCursorPosCallback(window, onMousePosChanged);
-	glfwSetScrollCallback(window, onMouseScrolled);
-	/*------ Further openGL config END-------*/
 
 	/*--Freetype setup--*/
 	FT_Library freeTypeLib;
@@ -472,13 +554,14 @@ int main()
 	camera->SetPosition(glm::vec3(-3.0f, 3.0f, 5.0f));
 	camera->UpdateAngles(40.0f, -30.0f);
 	std::string insText = "Hot key. M: depth test mode, V: visualize, T: stencil test, C: cull_face mode, E: Edge detecting mode";
-	std::string insText_2 = "N: Norm vec visualize";
+	std::string insText_2 = "N: Norm vec visualize. P: Wireframe mode";
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_M, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_V, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_T, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_C, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_E, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_N, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_P, GLFW_RELEASE));
 	/*--Custom setup END--*/
 
 	/*--Texture buffer setup--*/
@@ -568,6 +651,9 @@ int main()
 		{
 			glDisable(GL_STENCIL_TEST);
 		}
+		//Set draw style to wireframe polygons
+		if(isWireframeEnabled)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		/*---Rendering part---*/
 
 		float currentFrameTime = glfwGetTime();
@@ -642,6 +728,29 @@ int main()
 		modelShader.SetMat4f("modelMat", glm::value_ptr(customModelTransMat));
 
 		customModel.Render(modelShader);
+		//Planet model
+		model = glm::rotate(planetModelMat, currentFrameTime, glm::vec3(0.0f, 1.0f, 0.0f));
+		modelShader.SetMat4f("modelMat", model);
+		planetModel.Render(modelShader);
+
+		// draw meteorites
+		multiInstanceShader.EnableShaderProgram();
+		model = camera->GetViewMat();
+		model = glm::rotate(model, currentFrameTime, glm::vec3(0.0f, 1.0f, 0.0f));
+		multiInstanceShader.SetMat4f("viewMat", model);
+		multiInstanceShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+		multiInstanceShader.SetVec3f("viewPos", glm::value_ptr(camera->GetViewPos()));
+		multiInstanceShader.SetInt("material_texture_diffuse1", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, rockModel.GetLoadedTexture()[0].m_id);
+		for (unsigned int i = 0; i < rockModel.GetMeshes().size(); i++)
+		{
+			glBindVertexArray(rockModel.GetMeshes()[i].GetVAO());
+			glDrawElementsInstanced(
+				GL_TRIANGLES, rockModel.GetMeshes()[i].GetIndices().size(), GL_UNSIGNED_INT, 0, amount
+			);
+			glBindVertexArray(0);
+		}
 		//Cubes
 		if (isStencilTestEnabled)
 		{
@@ -684,6 +793,11 @@ int main()
 			model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
 			normVecVisualizeShader.SetMat4f("modelMat", glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			model = glm::rotate(planetModelMat, currentFrameTime, glm::vec3(0.0f, 1.0f, 0.0f));
+			modelShader.SetMat4f("modelMat", model);
+			normVecVisualizeShader.SetMat4f("modelMat", model);
+			planetModel.Render(normVecVisualizeShader);
 		}
 		glBindVertexArray(0);
 		//
@@ -749,6 +863,7 @@ int main()
 		glEnable(GL_CULL_FACE);
 		glBindVertexArray(0);
 		//Pass default framebuffer
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
@@ -863,6 +978,12 @@ void processInput(GLFWwindow *window)
 		KeyState[GLFW_KEY_N] = glfwGetKey(window, GLFW_KEY_N);
 		if (KeyState[GLFW_KEY_N] == GLFW_RELEASE)
 			isNormVecVisualizeEnabled = !isNormVecVisualizeEnabled;
+	}
+	if (KeyState[GLFW_KEY_P] != glfwGetKey(window, GLFW_KEY_P))
+	{
+		KeyState[GLFW_KEY_P] = glfwGetKey(window, GLFW_KEY_P);
+		if (KeyState[GLFW_KEY_P] == GLFW_RELEASE)
+			isWireframeEnabled = !isWireframeEnabled;
 	}
 }
 

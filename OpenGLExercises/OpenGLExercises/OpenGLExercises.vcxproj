@@ -155,6 +155,7 @@
     <None Include="..\Data\Shaders\Lighting.fs" />
     <None Include="..\Data\Shaders\LightingSource.fs" />
     <None Include="..\Data\Shaders\Model.vs" />
+    <None Include="..\Data\Shaders\MultiInstance.vs" />
     <None Include="..\Data\Shaders\Normal.vs" />
     <None Include="..\Data\Shaders\ApplyTexture.fs" />
     <None Include="..\Data\Shaders\NormalModel.fs" />

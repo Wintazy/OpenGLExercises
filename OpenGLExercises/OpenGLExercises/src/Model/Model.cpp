@@ -138,6 +138,7 @@ std::vector<Texture> Model::LoadMaterialTexture(aiMaterial* material, aiTextureT
 			texture.m_type = typeName;
 			texture.m_path = texturePath.C_Str();
 			textures.push_back(texture);
+			m_loadedTextures.push_back(texture);
 		}
 	}
 

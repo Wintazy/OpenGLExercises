@@ -11,6 +11,8 @@ class Model
 public:
 	Model(const char* datapath);
 	void Render(ShadersLoader shader);
+	std::vector<Mesh> GetMeshes() { return m_meshes; }
+	std::vector<Texture> GetLoadedTexture() { return m_loadedTextures; }
 private:
 	void Init(std::string dataPath);
 	void ProcessNode(aiNode* node, const aiScene* scene);
