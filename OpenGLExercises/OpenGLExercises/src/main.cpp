@@ -78,6 +78,7 @@ bool isCullFrontFace = false;
 bool isEdgeDetectEnabled = false;
 bool isNormVecVisualizeEnabled = false;
 bool isWireframeEnabled = false;
+bool isMSAAEnabled = false;
 std::map<int, int> KeyState;
 
 float lastFrameTime = 0.0f;
@@ -144,6 +145,7 @@ int main()
 	//Handle mouse input
 	glfwSetCursorPosCallback(window, onMousePosChanged);
 	glfwSetScrollCallback(window, onMouseScrolled);
+
 	/*------ Further openGL config END-------*/
 
 	/*---Init shaders---*/
@@ -562,21 +564,26 @@ int main()
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_E, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_N, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_P, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_X, GLFW_RELEASE));
 	/*--Custom setup END--*/
 
 	/*--Texture buffer setup--*/
 	unsigned int frameBuffer;
 	glGenFramebuffers(1, &frameBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);	
 
-	unsigned int texColorBuffer = LoadTexture(nullptr);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+	unsigned int texColorBuffer;
+	glGenTextures(1, &texColorBuffer);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texColorBuffer);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA, SCREEN_WIDTH, SCREEN_HEIGHT, GL_TRUE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texColorBuffer, 0);
 
 	unsigned int rbo;
 	glGenRenderbuffers(1, &rbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER , GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER , GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER: Framebuffer is not complete " << std::endl;
@@ -654,6 +661,12 @@ int main()
 		//Set draw style to wireframe polygons
 		if(isWireframeEnabled)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		//Multi sampling toogle
+		if(isMSAAEnabled)
+			glEnable(GL_MULTISAMPLE);
+		else
+			glDisable(GL_MULTISAMPLE);
 		/*---Rendering part---*/
 
 		float currentFrameTime = glfwGetTime();
@@ -864,7 +877,8 @@ int main()
 		glBindVertexArray(0);
 		//Pass default framebuffer
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, frameBuffer);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -876,6 +890,7 @@ int main()
 		glBindVertexArray(quadVAO);
 		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBlitFramebuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		glBindVertexArray(0);
 		//Render text---------------
 		std::string cameraPos = "CameraPos: " + std::to_string(camera->GetViewPos().x) + " " + std::to_string(camera->GetViewPos().y) + " " + std::to_string(camera->GetViewPos().z);
@@ -985,6 +1000,12 @@ void processInput(GLFWwindow *window)
 		if (KeyState[GLFW_KEY_P] == GLFW_RELEASE)
 			isWireframeEnabled = !isWireframeEnabled;
 	}
+	if (KeyState[GLFW_KEY_X] != glfwGetKey(window, GLFW_KEY_X))
+	{
+		KeyState[GLFW_KEY_X] = glfwGetKey(window, GLFW_KEY_X);
+		if (KeyState[GLFW_KEY_X] == GLFW_RELEASE)
+			isMSAAEnabled = !isMSAAEnabled;
+	}
 }
 
 void onMousePosChanged(GLFWwindow *window, double posX, double posY)
@@ -1033,7 +1054,7 @@ unsigned int LoadTexture(char const *path, GLuint wrappMethod)
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	if (data == nullptr)
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, format, SCREEN_WIDTH, SCREEN_HEIGHT, 0, format, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, SCREEN_WIDTH, SCREEN_HEIGHT, GL_FALSE);
 	}
 	else
 	{
