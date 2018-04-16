@@ -568,6 +568,7 @@ int main()
 	/*--Custom setup END--*/
 
 	/*--Texture buffer setup--*/
+	//Buffer for MSAA
 	unsigned int frameBuffer;
 	glGenFramebuffers(1, &frameBuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);	
@@ -586,9 +587,25 @@ int main()
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "ERROR::FRAMEBUFFER: Framebuffer is not complete " << std::endl;
+		std::cout << "ERROR::FRAMEBUFFER: MSAAbuffer is not complete " << std::endl;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//Buffer for post-processing
+	unsigned int postProcessingBuffer;
+	glGenFramebuffers(1, &postProcessingBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, postProcessingBuffer);
+
+	unsigned int postProcessingTex = LoadTexture(nullptr);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessingTex, 0);
+
+	unsigned int ppRBO;
+	glGenRenderbuffers(1, &ppRBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, ppRBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, ppRBO);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER: Post-proc buffer is not complete " << std::endl;
 
 	unsigned int quadVAO, quadVBO;
 	glGenVertexArrays(1, &quadVAO);
@@ -875,10 +892,13 @@ int main()
 		}
 		glEnable(GL_CULL_FACE);
 		glBindVertexArray(0);
-		//Pass default framebuffer
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		//Resolve multisampled buffer
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, postProcessingBuffer);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, frameBuffer);
+		glBlitFramebuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		//Pass default framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -888,9 +908,8 @@ int main()
 		else
 			screenShader.EnableShaderProgram();
 		glBindVertexArray(quadVAO);
-		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+		glBindTexture(GL_TEXTURE_2D, postProcessingTex);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBlitFramebuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		glBindVertexArray(0);
 		//Render text---------------
 		std::string cameraPos = "CameraPos: " + std::to_string(camera->GetViewPos().x) + " " + std::to_string(camera->GetViewPos().y) + " " + std::to_string(camera->GetViewPos().z);
@@ -1054,7 +1073,7 @@ unsigned int LoadTexture(char const *path, GLuint wrappMethod)
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	if (data == nullptr)
 	{
-		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, SCREEN_WIDTH, SCREEN_HEIGHT, GL_FALSE);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, SCREEN_WIDTH, SCREEN_HEIGHT, 0, format, GL_UNSIGNED_BYTE, NULL);
 	}
 	else
 	{
