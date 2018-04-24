@@ -29,7 +29,7 @@ void main()
 
 	// diffuse 
     vec3 lightDir = normalize(light.position - FragPos);
-    vec3 norm = normalize(-lightDir);
+    vec3 norm = normalize(NormVec);
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = light.diffuse * diff * texture(material_texture_diffuse1, TexCoords).rgb;
 
@@ -44,9 +44,9 @@ void main()
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 	
 	ambient  *= attenuation;  
-    //diffuse   *= attenuation;
-    //specular *= attenuation;  
+    diffuse   *= attenuation;
+    specular *= attenuation;  
 	
-	vec3 result = ambient + specular;
+	vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);
 }

@@ -148,6 +148,28 @@ int main()
 
 	/*------ Further openGL config END-------*/
 
+	/*--Custom setup--*/
+	camera->SetPosition(glm::vec3(-3.0f, 3.0f, 5.0f));
+	camera->UpdateAngles(40.0f, -30.0f);
+	std::string insText = "Hot key. M: depth test mode, V: visualize, T: stencil test, C: cull_face mode, E: Edge detecting mode";
+	std::string insText_2 = "N: Norm vec visualize. P: Wireframe mode";
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_M, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_V, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_T, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_C, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_E, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_N, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_P, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_X, GLFW_RELEASE));
+	//Light source
+	glm::vec3 lightAmbient = glm::vec3(0.5f, 0.5f, 0.5f);
+	glm::vec3 lightDiffuse = glm::vec3(0.8f, 0.8f, 0.8f);
+	glm::vec3 lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+	float lightConstant = 1.0f;
+	float lightLinear = 0.09f;
+	float lightQuadratic = 0.002f;
+	/*--Custom setup END--*/
+
 	/*---Init shaders---*/
 	ShadersLoader normalTextureShader = ShadersLoader();
 	normalTextureShader.LoadShaders(NORMAL_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
@@ -182,12 +204,15 @@ int main()
 	ShadersLoader multiInstanceShader = ShadersLoader();
 	multiInstanceShader.LoadShaders(MULTI_INSTANCE_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
 	multiInstanceShader.LoadShaders(NORMAL_MODEL_SHADER_PATH, GL_FRAGMENT_SHADER);
+
+	ShadersLoader* lightSourceShader = new ShadersLoader();
+	lightSourceShader->LoadShaders(NORMAL_VERTEX_SHADER_PATH, GL_VERTEX_SHADER);
+	lightSourceShader->LoadShaders(LIGHTING_SOURCE_SHADER_PATH, GL_FRAGMENT_SHADER);
 	/*---Init shaders END---*/
 
 	/*----Load models data----*/
 	Model customModel = Model(AERITH_MODEL_PATH);
 	modelShader.EnableShaderProgram();
-	modelShader.SetVec3f("light.position", 1.0f, 1.0f, 1.0f);
 	modelShader.SetVec3f("light.ambient", 0.5f, 0.5f, 0.5f);
 	modelShader.SetVec3f("light.diffuse", 0.8f, 0.8f, 0.8f);
 	modelShader.SetVec3f("light.specular", 1.0f, 1.0f, 1.0f);
@@ -401,13 +426,12 @@ int main()
 	planetModelMat = glm::scale(planetModelMat, glm::vec3(0.2f, 0.2f, 0.2f));
 	//Generate rocks VAO
 	multiInstanceShader.EnableShaderProgram();
-	multiInstanceShader.SetVec3f("light.position", 1.0f, 1.0f, 1.0f);
-	multiInstanceShader.SetVec3f("light.ambient", 0.5f, 0.5f, 0.5f);
-	multiInstanceShader.SetVec3f("light.diffuse", 0.8f, 0.8f, 0.8f);
-	multiInstanceShader.SetVec3f("light.specular", 1.0f, 1.0f, 1.0f);
-	multiInstanceShader.SetFloat("light.constant", 1.0f);
-	multiInstanceShader.SetFloat("light.linear", 0.09);
-	multiInstanceShader.SetFloat("light.quadratic", 0.002);
+	multiInstanceShader.SetVec3f("light.ambient", lightAmbient);
+	multiInstanceShader.SetVec3f("light.diffuse", lightDiffuse);
+	multiInstanceShader.SetVec3f("light.specular", lightSpecular);
+	multiInstanceShader.SetFloat("light.constant", lightConstant);
+	multiInstanceShader.SetFloat("light.linear", lightLinear);
+	multiInstanceShader.SetFloat("light.quadratic", lightQuadratic);
 	//Gegnerate random position for the rocks
 	unsigned int amount = 200;
 	glm::mat4 *modelMatrices;
@@ -466,6 +490,15 @@ int main()
 		std::cout << "Init rock VAO: " + std::to_string(i) + " glGetError: " << glGetError() << std::endl;
 		glBindVertexArray(0);
 	}
+
+	//light source VAO
+	unsigned int lightVAO;
+	glGenVertexArrays(1, &lightVAO);
+	glBindVertexArray(lightVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
 	/*Prepare vertex data to render END*/
 
 	/*---Load texture---*/
@@ -476,9 +509,6 @@ int main()
 	unsigned int grassTexture = LoadTexture(GLASS_WINDOW_TEXTURE_PATH, GL_CLAMP_TO_EDGE);
 	std::cout << "Load grassTexture. glGetError: " << glGetError() << std::endl;
 	/*---Load texture end---*/
-
-	/*--Bind texture to shader--*/
-	/*--Bind texture to shader END--*/
 
 	/*--Freetype setup--*/
 	FT_Library freeTypeLib;
@@ -551,21 +581,6 @@ int main()
 	glyphShader.EnableShaderProgram();
 	glyphShader.SetMat4f("projectionMat", glm::value_ptr(textProjectionMat));
 	/*--Freetype setup END--*/
-
-	/*--Custom setup--*/
-	camera->SetPosition(glm::vec3(-3.0f, 3.0f, 5.0f));
-	camera->UpdateAngles(40.0f, -30.0f);
-	std::string insText = "Hot key. M: depth test mode, V: visualize, T: stencil test, C: cull_face mode, E: Edge detecting mode";
-	std::string insText_2 = "N: Norm vec visualize. P: Wireframe mode";
-	KeyState.insert(std::pair<int, int>(GLFW_KEY_M, GLFW_RELEASE));
-	KeyState.insert(std::pair<int, int>(GLFW_KEY_V, GLFW_RELEASE));
-	KeyState.insert(std::pair<int, int>(GLFW_KEY_T, GLFW_RELEASE));
-	KeyState.insert(std::pair<int, int>(GLFW_KEY_C, GLFW_RELEASE));
-	KeyState.insert(std::pair<int, int>(GLFW_KEY_E, GLFW_RELEASE));
-	KeyState.insert(std::pair<int, int>(GLFW_KEY_N, GLFW_RELEASE));
-	KeyState.insert(std::pair<int, int>(GLFW_KEY_P, GLFW_RELEASE));
-	KeyState.insert(std::pair<int, int>(GLFW_KEY_X, GLFW_RELEASE));
-	/*--Custom setup END--*/
 
 	/*--Texture buffer setup--*/
 	//Buffer for MSAA
@@ -729,6 +744,9 @@ int main()
 		//
 		if(isStencilTestEnabled)
 			glStencilMask(0x00);
+
+		//Update light source position
+		glm::vec3 lightPos = glm::vec3(sin(currentFrameTime), 1, cos(currentFrameTime) -1.0f);
 		//Axes
 		glm::mat4 model;
 		glBindVertexArray(axesVAO);
@@ -748,6 +766,7 @@ int main()
 
 		//Model
 		modelShader.EnableShaderProgram();
+		modelShader.SetVec3f("light.position", lightPos);
 		modelShader.SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
 		modelShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
 		modelShader.SetVec3f("viewPos", glm::value_ptr(camera->GetViewPos()));
@@ -759,14 +778,14 @@ int main()
 
 		customModel.Render(modelShader);
 		//Planet model
-		model = glm::rotate(planetModelMat, currentFrameTime, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelShader.SetMat4f("modelMat", model);
+		modelShader.SetMat4f("modelMat", planetModelMat);
 		planetModel.Render(modelShader);
 
 		// draw meteorites
 		multiInstanceShader.EnableShaderProgram();
 		model = camera->GetViewMat();
 		model = glm::rotate(model, currentFrameTime, glm::vec3(0.0f, 1.0f, 0.0f));
+		multiInstanceShader.SetVec3f("light.position", lightPos);
 		multiInstanceShader.SetMat4f("viewMat", model);
 		multiInstanceShader.SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
 		multiInstanceShader.SetVec3f("viewPos", glm::value_ptr(camera->GetViewPos()));
@@ -824,10 +843,11 @@ int main()
 			normVecVisualizeShader.SetMat4f("modelMat", glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 
-			model = glm::rotate(planetModelMat, currentFrameTime, glm::vec3(0.0f, 1.0f, 0.0f));
-			modelShader.SetMat4f("modelMat", model);
-			normVecVisualizeShader.SetMat4f("modelMat", model);
+			normVecVisualizeShader.SetMat4f("modelMat", planetModelMat);
 			planetModel.Render(normVecVisualizeShader);
+
+			normVecVisualizeShader.SetMat4f("modelMat", glm::value_ptr(customModelTransMat));
+			customModel.Render(modelShader);
 		}
 		glBindVertexArray(0);
 		//
@@ -860,6 +880,19 @@ int main()
 			glStencilMask(0xFF);
 			glEnable(GL_DEPTH_TEST);
 		}
+		//Light source
+		model = glm::mat4();
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.1f));
+
+		lightSourceShader->EnableShaderProgram();
+		lightSourceShader->SetMat4f("viewMat", glm::value_ptr(camera->GetViewMat()));
+		lightSourceShader->SetMat4f("projectionMat", glm::value_ptr(camera->GetProjectionMat()));
+		lightSourceShader->SetVec3f("cameraPos", camera->GetViewPos());
+		lightSourceShader->SetVec3f("lightColor", lightDiffuse);
+		lightSourceShader->SetMat4f("modelMat", glm::value_ptr(model));
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		//Skybox
 		glDisable(GL_CULL_FACE);
 		skyboxShader.EnableShaderProgram();
