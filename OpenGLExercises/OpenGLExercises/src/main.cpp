@@ -79,6 +79,7 @@ bool isEdgeDetectEnabled = false;
 bool isNormVecVisualizeEnabled = false;
 bool isWireframeEnabled = false;
 bool isMSAAEnabled = false;
+bool isGammaCorrectEnabled = false;
 std::map<int, int> KeyState;
 
 float lastFrameTime = 0.0f;
@@ -152,7 +153,7 @@ int main()
 	camera->SetPosition(glm::vec3(-3.0f, 3.0f, 5.0f));
 	camera->UpdateAngles(40.0f, -30.0f);
 	std::string insText = "Hot key. M: depth test mode, V: visualize, T: stencil test, C: cull_face mode, E: Edge detecting mode";
-	std::string insText_2 = "N: Norm vec visualize. P: Wireframe mode";
+	std::string insText_2 = "N: Norm vec visualize. P: Wireframe mode. X: Multi sampling. G: Gamma correction";
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_M, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_V, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_T, GLFW_RELEASE));
@@ -161,6 +162,7 @@ int main()
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_N, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_P, GLFW_RELEASE));
 	KeyState.insert(std::pair<int, int>(GLFW_KEY_X, GLFW_RELEASE));
+	KeyState.insert(std::pair<int, int>(GLFW_KEY_G, GLFW_RELEASE));
 	//Light source
 	glm::vec3 lightAmbient = glm::vec3(0.5f, 0.5f, 0.5f);
 	glm::vec3 lightDiffuse = glm::vec3(0.8f, 0.8f, 0.8f);
@@ -699,6 +701,9 @@ int main()
 			glEnable(GL_MULTISAMPLE);
 		else
 			glDisable(GL_MULTISAMPLE);
+
+		//Gamma correction
+		glDisable(GL_FRAMEBUFFER_SRGB);
 		/*---Rendering part---*/
 
 		float currentFrameTime = glfwGetTime();
@@ -955,7 +960,9 @@ int main()
 		glEnable(GL_CULL_FACE);
 		//
 		/*---Rendering end---*/
-		
+		//Gamma correction
+		if(isGammaCorrectEnabled)
+			glEnable(GL_FRAMEBUFFER_SRGB);
 
 		//Swap color buffer used as output to the screen
 		glfwSwapBuffers(window);
@@ -1057,6 +1064,12 @@ void processInput(GLFWwindow *window)
 		KeyState[GLFW_KEY_X] = glfwGetKey(window, GLFW_KEY_X);
 		if (KeyState[GLFW_KEY_X] == GLFW_RELEASE)
 			isMSAAEnabled = !isMSAAEnabled;
+	}
+	if (KeyState[GLFW_KEY_G] != glfwGetKey(window, GLFW_KEY_G))
+	{
+		KeyState[GLFW_KEY_G] = glfwGetKey(window, GLFW_KEY_G);
+		if (KeyState[GLFW_KEY_G] == GLFW_RELEASE)
+			isGammaCorrectEnabled = !isGammaCorrectEnabled;
 	}
 }
 
